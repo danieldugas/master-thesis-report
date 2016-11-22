@@ -1,0 +1,76 @@
+\chapter{SegMatch}
+\label{sec:segmatch}
+
+%TODO
+Intro and General Pipeline\\
+
+Specific Pipeline, example relocalizer, onlinematcher\\
+
+\section{Sensor Data}
+\label{sec:sensordata}
+
+Two types of sensors were used in the course of this project, rotating sensors (VELODYNE) and rolling sensors (SICK). 
+
+Rotating sensors have a 360° view. With each rotation, they scan points along a cone originating from the sensor, resulting in a single circular scan line. This cone angle is varied by a set amount after each full rotation, with a maximum absolute angle making it so that the sensor is unable to scan the area directly above or under it. A typical scan is illustrated in Fig.~\ref{fig:velodyne-scan}.\\ % TODO
+
+Rolling sensors have a 180° view, scanning towards the front and sides. The scan is flat, meaning that the points are all located on the same plane relative to the sensor’s roll angle. By varying this roll angle with every subsequent scan, the sensor can produce points at many vertical angles towards its sides. A typical scan is illustrated in Fig.~\ref{fig:sick-scan}.\\ % TODO
+
+\subsection{Data Distortion}
+\label{subsec:distortion}
+
+As the sensor scans its surroundings, the robot may move and rotate. An extremum example: should the robot counter-rotate at the same angular velocity as its rotating-scanner, all points will be located on the same vertical plane in the world frame. However, naively mapping the sensor frame to the world frame with a single affine transform will not accurately portray this effect. Precise knowledge of the robot’s odometry at various times during the scanning process allows to correct for distortion, by associating a different affine mapping from sensor frame to world frame at each discrete rotation angle of the sensor. See \ref{velodyne-assembler} by Philipp Kruesi for more information.\\ %TODO velodyne-assembler
+
+\subsection{Sensor Artifacts}
+\label{subsec:artifacts}
+
+After being corrected for distortion, sensor data contains registration patterns, as visible in Fig.~\ref{fig:velodyne-scan} (in this case as scan lines due to the rotating sensor's function).
+\section{Laser SLAM}
+\label{sec:SLAM}
+
+As single sensor scans contain registration patterns (Subsection ~\ref{subsec:artifacts}), subsequent scans should be accumulated while the robot and sensor move, in order to collect data over the whole environment. Should the scans be assembled correctly, i.e, according to the correct transform w.r.t. each other, registration patterns get progressively reduced, as the accumulated data densifies.\\
+
+To do so, knowledge of the robot's position and orientation at each sensor aquisition time is required. When the robot odometry is not sufficiently trustworthy, the Laser SLAM algorithm allows using the sensor data to increase the odometry knowledge and improve the quality of the accumulated data.\\
+
+\section{Segmentation}
+\label{sec:segmentation}
+
+%TODO
+Target
+
+\subsection{Region Growing Segmentation}
+\label{subsec:region-growing}
+%TODO
+
+\subsection{Difference of Normals Segmentation}
+\label{subsec:DoN}
+%TODO
+
+\subsection{Optimizations}
+\label{subsec:optimizations}
+%TODO
+
+D2Depth-based Segmentation
+Normals from original scan
+
+\section{Description}
+\label{sec:description}
+%TODO
+
+\section{Matching}
+\label{sec:matching}
+%TODO
+
+\section{Finding Patterns}
+\label{sec:filtering}
+
+%TODO
+Geometric Consistency
+
+\section{Online Example}
+\label{sec:online}
+
+%TODO
+Online segmentation strategy
+
+\section{Results}
+\label{sec:segmatch-results}

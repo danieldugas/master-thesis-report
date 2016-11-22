@@ -1,4 +1,10 @@
 \chapter*{Abstract}
 \addcontentsline{toc}{chapter}{Abstract}
 
-Hier kommt der Abstact hin \dots
+The current state-of-the-art for mapping with range data is evolving quickly. Real time mapping has already been demonstrated using graph-based SLAM and recognition, and shown to yield useful results in many cases.\\
+
+However most methods still show non-negligible amounts of drift over time, in which case lower frequency algorithms can be developed to “close the loop”, i.e., to recognize already-mapped environment and use this prior knowledge to adjust the accumulated error of previous predictions.\\
+
+This project proposes and implements SegMatch, an algorithm for finding loop closures with range data, based on segmentation and matching of the 3D point cloud. This is inpired by the way humans seem to recall objects and object patterns in previously visited locations, in order to perform place recognition and adjust prior location error.\\ %TODO cite?
+
+In a second step, we test and evaluate neural networks on their ability to describe segments in an unsupervised regime. Finally, they are inserted into the algorithm pipeline to enhance its ability to find loop closures.\\
