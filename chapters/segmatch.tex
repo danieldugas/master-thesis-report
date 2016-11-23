@@ -1,13 +1,24 @@
 \chapter{SegMatch}
-\label{sec:segmatch}
+\label{chap:segmatch}
 
+\section{Intro \& Pipeline}
+\label{sec:intro-pipeline}
 %TODO
 Intro and General Pipeline\\
 
 Specific Pipeline, example relocalizer, onlinematcher\\
 
-\section{Sensor Data}
-\label{sec:sensordata}
+\section{Input}
+\label{sec:input}
+
+The first step of SegMatch is to acquire data on which the algorithm is performed. Segmatch takes as input two point clouds, the source and target, between which it attempts to find segment matches.\\
+
+It sometimes happen that the target input is already segmented and described (see Section \ref{sec:online}), in which case the Segmentation and Description steps are only applied to the source cloud.\\
+
+Usually, LiDAR sensors do not produce ready-made point clouds of the local area, and it may be necessary to consider the following subsections, \ref{subsec:sensordata}, \ref{subsec:distortion}, \ref{subsec:artefacts}, and \ref{subsec:SLAM}, to understand how raw sensor data can be transformed into SegMatch input.
+
+\subsection{Sensor Data}
+\label{subsec:sensordata}
 
 Two types of sensors were used in the course of this project, rotating sensors (Velodyne) and rolling sensors (SICK). \\
 
@@ -26,15 +37,15 @@ Precise knowledge of the robot’s odometry at various times during the scanning
 
 In the case of rotating sensors, Philipp Kruesi has built the velodyne-assembler package \ref{velodyne-assembler} which corrects distortion in the aforementioned manner.\\ %TODO velodyne-assembler?
 
-\subsection{Sensor Artifacts}
-\label{subsec:artifacts}
+\subsection{Sensor Artefacts}
+\label{subsec:artefacts}
 
 After being corrected for distortion, sensor data contains registration patterns, as visible in Fig.~\ref{fig:velodyne-scan} (in this case, scan lines due to the rotating sensor's registration mechanics).
 
-\section{Laser SLAM}
-\label{sec:SLAM}
+\subsection{Laser SLAM}
+\label{subsec:SLAM}
 
-As single sensor scans contain registration patterns (Subsection ~\ref{subsec:artifacts}), subsequent scans should be accumulated while the robot and sensor move, in order to collect data over the whole environment. Should the scans be assembled correctly, i.e, according to the correct transform w.r.t. each other, registration patterns get progressively reduced, as the accumulated data densifies.\\
+As single sensor scans contain registration patterns (Subsection ~\ref{subsec:artefacts}), subsequent scans should be accumulated while the robot and sensor move, in order to collect data over the whole environment. Should the scans be assembled correctly, i.e, according to the correct transform w.r.t. each other, registration patterns get progressively reduced, as the accumulated data densifies.\\
 
 To do so, knowledge of the robot's position and orientation at each sensor aquisition time is required. When the robot odometry is not sufficiently trustworthy, the Laser SLAM algorithm allows using the sensor data to increase the odometry knowledge and improve the quality of the accumulated data.\\
 
@@ -161,6 +172,10 @@ However, descriptors used here are not ideal and as such better matching results
 \subsection{Random Forests}
 \label{subsec:RF}
 
+Random Forests are a Machine Learning algorithm which trains many decision trees simultaneously, then polls them in order to classify input.\\
+
+In our case, the input is a pair of feature vectors belonging to two segments, and the output a boolean describing wether or not they are a match. This output can also instead be a probability of match $p$, with $0 \leq p \leq 1$.
+
 \section{Finding Patterns}
 \label{sec:filtering}
 
@@ -174,7 +189,27 @@ The clusters which remain, those consistuting of 3 or more matches, are loop clo
 \section{Applying SegMatch - Online Example}
 \label{sec:online}
 
-%TODO
+Thus far into this chapter, the general steps of the SegMatch algorithm have been presented. SegMatch can be applied to several situations, as outlined in Section \ref{sec:intro-pipeline}, without needing to modify any of the steps in the above sections.\\
+
+What does change between implementations is \textit{when} to run SegMatch, \textit{what data} is to be taken as input, and of course the parameters.\\
+
+The present section illustrates an example of how we applied SegMatch, in the case of a full online loop-closure-finding module in ROS.
+
+\subsection{Segmentation Strategy}
+\label{subsec:segmentation-strategy}
+
+In the online scenario, the goal is to use SegMatch as-we-go in order to attempt to find matches between the most recent environment, and the recorded past environment.\\
+
+As such, the overall process is to:   
+
+\begin{itemize}
+\item 1. decide when to apply SegMatch
+\item 2. Apply SegMatch between current input and past.
+\item 3. Add resulting segments to the recorded past.
+\end{itemize}
+
+\subsection{Segmentation Frequency}
+\label{subsec:segmentation-frequency}
 
 The process of segmenting point clouds is one of the more computationally heavy parts of the pipeline. As such, a good strategy for deciding when and how segmentation occurs is critical to good performance.\\
 
@@ -182,13 +217,13 @@ Ideally, ensuring that each point is passed through the segmenter only once, at 
 
 Regarding time: it is intuited that regions of space should be passed through the segmenter when they are most accurate and dense. This presents a trade-off problem. The longer one waits before segmenting, the worse positioning confidence is, and the larger the uncertainty in the points' fixed frame position (this leads to 'fuzzy' segments).\\
 
-Not waiting long enough, on the other hand, leads to sparse segments, which might be missing important geometrical information, or introduce artefacts - such as scan-line patterns.\\
+Not waiting long enough, on the other hand, leads to sparse segments, which might be missing important geometrical information, or introduce artefacts - such as scan-line patterns.
 
 One way of handling this trade-off is to set a target `sufficient density', where it is estimated that increasing density leads to diminishing information gain.\\
 
 From that point on, the costs of increasing density - i.e. loss of accuracy - outweigh the benefits, and segmentation should be undertaken.\\
 
-During the accumulative process of capturing a point cloud map, the sensor might cover regions which will reach this sufficient density at different times.\\
+During the accumulative process of capturing a point cloud map, the sensor might cover regions which will reach this sufficient density at different times.
 
 Within this paradigm, it would be optimal to segment different areas at different times even though they were captured simultaneously.\\
 
@@ -203,7 +238,7 @@ The resulting strategy is excessively simple: accumulate all points, until targe
 
 A further idealization is to relate densification to movement. This is particularly true of rotating LIDAR systems such as the velodyne, with wich the sensor can only cover new areas if the robot moves.\\
 
-According to this idealization, when the robot has moved a certain amount $\Delta x$ it densifies nearby objects by the amount $\Delta D$.\\
+According to this idealization, when the robot has moved a certain amount $\Delta x$ it densifies nearby objects by the amount $\Delta D$.
 
 Assuming that the relationship between the two can be modelled with a simple proportionality,
 $$\frac{\Delta x}{\Delta D} = \alpha$$
