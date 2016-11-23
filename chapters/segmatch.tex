@@ -60,7 +60,7 @@ For example, a specific algorithm, using a certain set of parameters, could tend
 
 By understanding this, it is easier to select the parameters which lead to optimal size, number and complexity of segments for the purposes of one's own use-case.\\
 
-In this section, we present the main segmentation algorithms implemented and used in SegMatch. Their output and performance is compared.\\
+In this section, we present the main segmentation algorithms implemented and used in SegMatch. Their output and performance is discussed.\\
 
 \subsection{Euclidean Clustering}
 \label{subsec:euclidean}
@@ -75,6 +75,8 @@ In terms of performance, the algorithm is very fast, allowing SegMatch to perfor
 On the other hand, we often see large objects getting segmented as single clusters, and smaller objects getting clustered together simply because they happen to lie close to each other.\\
 
 Finally, it is generally necessary to filter out the ground as it tends to connect many objects together. This can offload complexity to ground filtering in the case of complex ground geometry, but is however simple in the case of a flat city street.\\
+
+Parameters: Euclidean distance threshold.
 
 \subsection{Difference of Normals Segmentation}
 \label{subsec:DoN}
@@ -95,24 +97,66 @@ The average neighboring normals are first calculated at each point for neighbour
 
 For each point, a difference of normals is calculated between the average neighbour normals for the two scales. As a result, areas which are flat at both the large and small scale have a low difference of normals. Those points are filtered out, and the remaining points are clustered together if their DoN operators are similar.\\
 
+Parameters: $r_s$, $r_l$, $\Delta_n^{threshold}$
+
+\subsection{Region Growing}
+\label{subsec:region-growing}
+
+The Region Growing algorithm is notably useful for segmenting areas where curvature remains under a certain threshold.
+%TODO
+
+Parameters: $\theta$
 
 \subsection{Optimizations}
 \label{subsec:optimizations}
 %TODO
 
-D2Depth-based Segmentation
+D2Depth-based Segmentation\\
 Normals from original scan
 
 \section{Description}
 \label{sec:description}
+%TODO
+Descriptors allow us to compress information about each segment's properties into an n-dimensional feature vector.\\
+
+Ideal descriptors would yield similar feature vectors for segments which are views of the same object. Segments which represent views of different objects should have different feature vectors.\\
+
+In other words, ideal descriptors lead to strong clustering in the n-dimensional feature space of segments representing views of the same objects. Weaker larger-scale clustering in accordance with object classes can reasonably be expected.\\
+
+This section outlines the pre-existing segment description algorithms used in SegMatch. In Chapter \ref{sec:segmatchAE}, we introduce our own descriptor based on an unsupervised learning approach.\\
+
+\subsection{Eigenvalue-based Features}
+\label{subsec:eigenvalues}
+
+$\lambda_1$, $\lambda_2$, $\lambda_3$ are the eigenvalues of the covariance matrix $C \in \mathbb{R}^{3x3}$
+$$
+C = 
+\begin{bmatrix}
+  cov(\textbf{x},\textbf{x}) & cov(\textbf{y},\textbf{x}) & cov(\textbf{z},\textbf{x})  \\
+  cov(\textbf{x},\textbf{y}) & cov(\textbf{y},\textbf{y}) & cov(\textbf{z},\textbf{y})  \\
+  cov(\textbf{x},\textbf{z}) & cov(\textbf{y},\textbf{z}) & cov(\textbf{z},\textbf{z})  \\
+\end{bmatrix} 
+$$
+$\textbf{x}$, $\textbf{y}$, $\textbf{z}$ being the coordinates of all points inside the segment.
+
+\subsection{Ensemble of Shapes}
+\label{subsec:ensemble-of-shapes}
+
+This descriptor calculates the statistical measure of some properties for randomly selected point pairs/triplets within the object.\\
 %TODO
 
 \section{Matching}
 \label{sec:matching}
 %TODO
 
-\subsection{KNN}
-\label{subsec:KNN}
+\subsection{kNN}
+\label{subsec:kNN}
+
+The simplest matching algorithm considered here, kNN selects the k nearest neighbours according to euclidean distances of a segment description in n-dimensional feature space.\\
+
+According to the definition of an ideal descriptor, this algorithm should be sufficient to recognize true segment matches.\\ 
+
+However, descriptors used here are not ideal and as such better matching results can be obtained by using a more complex matching algorithm.
 
 \subsection{Random Forests}
 \label{subsec:RF}
@@ -121,13 +165,90 @@ Normals from original scan
 \label{sec:filtering}
 
 %TODO
-Geometric Consistency
+An efficient method to extract patterns of matches from a list of potential matches is the Geometric Consistency algorithm \cite{geometric-consistency}.\\
 
-\section{Online Example}
+In this algorithm, matches are clustered together if they can form an Euclidean transformation, within a spatial tolerance $r$. As the Euclidean transformation has 6 degrees of freedom, any clusters with less than 3 matches is filtered out.\\
+
+The clusters which remain, those consistuting of 3 or more matches, are loop closure candidates. The algorithm also returns the transformations formed by each of these clusters.\\
+
+\section{Applying SegMatch - Online Example}
 \label{sec:online}
 
 %TODO
-Online segmentation strategy
+
+The process of segmenting point clouds is one of the more computationally heavy parts of the pipeline. As such, a good strategy for deciding when and how segmentation occurs is critical to good performance.\\
+
+Ideally, ensuring that each point is passed through the segmenter only once, at most twice, is critical to performance. This motivates the development of a well-designed segmentation strategy - that is, a process driving the decision such as which areas of the observed cloud to store, send for segmentation, and when.\\
+
+Regarding time: it is intuited that regions of space should be passed through the segmenter when they are most accurate and dense. This presents a trade-off problem. The longer one waits before segmenting, the worse positioning confidence is, and the larger the uncertainty in the points' fixed frame position (this leads to 'fuzzy' segments).\\
+
+Not waiting long enough, on the other hand, leads to sparse segments, which might be missing important geometrical information, or introduce artefacts - such as scan-line patterns.\\
+
+One way of handling this trade-off is to set a target `sufficient density', where it is estimated that increasing density leads to diminishing information gain.\\
+
+From that point on, the costs of increasing density - i.e. loss of accuracy - outweigh the benefits, and segmentation should be undertaken.\\
+
+During the accumulative process of capturing a point cloud map, the sensor might cover regions which will reach this sufficient density at different times.\\
+
+Within this paradigm, it would be optimal to segment different areas at different times even though they were captured simultaneously.\\
+
+
+This leads to quite complicated algorithms, and increases the amount of parameters which need to be tuned.\\
+
+However, though far away objects densify more slowly, they accumulate positional uncertainty faster. They are also less useful for positioning and place recognition, due to parallax effects.\\
+
+Thus it can be advantageous to prioritize closer objects, which allows one to assume a single rate of density increase for the whole area being captured - fixed to the close objects densification rate.\\
+
+The resulting strategy is excessively simple: accumulate all points, until target density is reached in nearby objects, then segment all accumulated points. After segmentation, discard those points and start over.\\
+
+A further idealization is to relate densification to movement. This is particularly true of rotating LIDAR systems such as the velodyne, with wich the sensor can only cover new areas if the robot moves.\\
+
+According to this idealization, when the robot has moved a certain amount $\Delta x$ it densifies nearby objects by the amount $\Delta D$.\\
+
+Assuming that the relationship between the two can be modelled with a simple proportionality,
+$$\frac{\Delta x}{\Delta D} = \alpha$$
+we are able to conclude that target density is reached when
+$$x_{target} = D_{target} * \alpha$$
+which gives us a simple rule: Segment the cloud every time the robot has moved/rotated by a certain amount $x_{target}$.\\
+
+Based on the range of the velodyne sensor, this density $D_{target}$ is only actually achieved within a certain distance from the sensor. As such, we apply a cylindrical filter at each segmentation position, with a max radius $R$.\\
+
+This affords a relatively simple implementation, with the added advantage that it makes relating segments to poses straightforward.\\
+
+
+
+\begin{figure}
+  \centering
+  \includegraphics[width=5.2in]{images/seg_queue.png}
+  \caption{The segmentation queue. Collectors shown in red, with the latest local map filtered to a cylinder visible at the right.}
+  \label{fig:seg-queue}
+\end{figure}
+Fig.~\ref{fig:seg-queue} illustrates the process of online segmentation described above.
+\subsection{Filtering Segments}
+
+\label{subsec:filtering-segments}
+
+\subsubsection{Sliced Segments}
+\label{subsub:sec:sliced}
+
+In the case where the SegMatch algorithm is applied to point clouds which have had a boundary filter applied, it is recommended to filter out segments which are partial views of objects split at the boundary.\\
+
+These partial segments can lower the quality of the matches and of the general algorithm.\\
+
+In order to do so, our method consists in first segmenting the boundary filtered point cloud, then applying a stricter version of the same boundary filter.\\
+
+For example, say that the boundary filter is cylindrical of radius $R$. We only keep segments which do not spill outside of a smaller radius $r = R-b$, $b$ being the thickness of the outer zone. Segments that have points within this zone are considered to likely also possess points outside of $R$, and to therefore be sliced.\\
+
+\subsubsection{Duplicates}
+\label{subsub:sec:duplicates}
+
+In our experiments, results indicate that it is necessary to prevent duplicate segments from being stored, as they later create duplicate matches.\\ 
+
+These duplicate matches are detrimental to the Geometrical Clustering step, either artificially increasing the amount of matches in a cluster, or even creating clusters consisting only of identical matches ( with an exagerated transformation, since there is not enough true degree of freedom information in those duplicate matches ).
+
 
 \section{Results}
 \label{sec:segmatch-results}
+
+Influence of parameters
+%TODO
