@@ -15,6 +15,8 @@ The first step of SegMatch is to acquire data on which the algorithm is performe
 
 It sometimes happen that the target input is already segmented and described (see Section \ref{sec:online}), in which case the Segmentation and Description steps are only applied to the source cloud.\\
 
+In any case, the Segmentation and Description steps are performed identically whether their input is the source or target cloud.\\
+
 Usually, LiDAR sensors do not produce ready-made point clouds of the local area, and it may be necessary to consider the following subsections, \ref{subsec:sensordata}, \ref{subsec:distortion}, \ref{subsec:artefacts}, and \ref{subsec:SLAM}, to understand how raw sensor data can be transformed into SegMatch input.
 
 \subsection{Sensor Data}
@@ -52,11 +54,13 @@ To do so, knowledge of the robot's position and orientation at each sensor aquis
 \section{Segmentation}
 \label{sec:segmentation}
 
-The goal of segmentation is to delimitate clouds which should be clustered together as object representations.\\
+The process of segmentation consists in clustering points which share a common property. In our case, the goal is for that property to be appartenance to a particular object, in the real-world space equivalent to point-cloud space.\\
 
-A perfect segmentation is however not explicitely defined. Should a building be segmented into more basic components, such as walls, windows, and doors, or as single large cluster? Should a tree be clustered as a trunk with a cluster of leaves above it or as a single cluster (see Fig.~\ref{fig:hierarchical})?\\
+The input of this step is a 3D point cloud. If both source and target clouds are to be segmented, this step is imply applied once to the source and once to the target, in exactly the same way.
 
-Moosman \cite{moosmann2011unsupervised} mentions hierarchically segmenting the scene, that is not only clustering point clouds into segments, but also subsegments and subsubsegments. This hierarchy is established in order to capture those patterns that exist in real-world objects, which can be composed of smaller, simpler objects.\\
+A perfect segmentation is however not explicitely defined. Should the point-cloud of a building be segmented into more basic components, such as walls, windows, and doors, or as single large cluster? Should a tree be clustered as a trunk with clusters of leaves above it or as a single cluster (illustrated in Fig.~\ref{fig:hierarchical})?\\
+
+Moosman \cite{moosmann2011unsupervised} mentions hierarchically segmenting the scene, i.e., not only clustering point clouds into segments, but also subsegments and subsubsegments. As a result, a single point can be assigned to a segment, \textit{and} one of its subsegments, and so on. This segment hierarchy is established in order to capture those patterns that exist in real-world objects, which can be composed of smaller, simpler objects.\\
 
 \begin{figure}
   \centering
@@ -65,7 +69,7 @@ Moosman \cite{moosmann2011unsupervised} mentions hierarchically segmenting the s
   \label{fig:hierarchical}
 \end{figure}
 
-It is useful to be aware of this concept of segment hierarchy even when using straightforward segmentation methods. By straightforward, we mean the segmentation algorithms which assign each point to at most one segment. Awareness of this hierarchy allows us to reason on where along it our segmentation algorithm works, and how that relates to the usefulness of the segments it produces.\\
+It is useful to be aware of this concept of segment hierarchy even when using straightforward segmentation methods. \textit{Straightforward}, in this context, refers to segmentation algorithms which assign each point to at most one segment, and do not consider sub- and subsub- (etc \ldots) segments. Awareness of this hierarchy allows us to reason on where along it our segmentation algorithm works, and how that relates to the usefulness of the segments it produces.\\
 
 For example, a specific algorithm, using a certain set of parameters, could tend to find segments which are very low in the hierarchy, i.e, smaller, less complex segments. This gives us a larger number of less unique segments, than say, running the same algorithm at a different scale.\\
 
@@ -85,7 +89,7 @@ In terms of performance, the algorithm is very fast, allowing SegMatch to perfor
 
 On the other hand, we often see large objects getting segmented as single clusters, and smaller objects getting clustered together simply because they happen to lie close to each other.\\
 
-Finally, it is generally necessary to filter out the ground as it tends to connect many objects together. This can offload complexity to ground filtering in the case of complex ground geometry, but is however simple in the case of a flat city street.\\
+Finally, it is generally necessary to filter out the ground as it tends to connect many objects together. This can offload complexity to ground filtering in the case of complex ground geometry, but is relatively simple to do in the case of a flat city street.\\
 
 Parameters: Euclidean distance threshold.
 
@@ -127,12 +131,16 @@ Normals from original scan
 
 \section{Description}
 \label{sec:description}
-%TODO
+
 Descriptors allow us to compress information about each segment's properties into an n-dimensional feature vector.\\
 
-Ideal descriptors would yield similar feature vectors for segments which are views of the same object. Segments which represent views of different objects should have different feature vectors.\\
+The input to this step is a list of segments. The output is a n-dimensional feature vector, a \textit{description}, for each segment. Like the segmentation step, this step is applied once to source and once to target data.
 
-In other words, ideal descriptors lead to strong clustering in the n-dimensional feature space of segments representing views of the same objects. Weaker larger-scale clustering in accordance with object classes can reasonably be expected.\\
+An ideal descriptor would yield identical feature vectors for any segments which are views of the same real-world object. If two segments represent views of different objects their feature vectors should differ.\\
+
+In other words, ideal descriptors lead to strong clustering in the n-dimensional feature space of segments representing views of the same objects. \\
+
+A good descriptor is a descriptor which approaches this behavior, where segments which are views of the same object are often clustered close to each other. Weaker larger-scale clustering in accordance with object classes (objects that are similar yet not identical) can reasonably be expected.\\
 
 This section outlines the pre-existing segment description algorithms used in SegMatch. In Chapter \ref{sec:segmatchAE}, we introduce our own descriptor based on an unsupervised learning approach.\\
 
@@ -158,16 +166,27 @@ This descriptor calculates the statistical measure of some properties for random
 
 \section{Matching}
 \label{sec:matching}
-%TODO
+
+Once descriptions of all source and target segments have been computed, the matching step is responsible for finding potential pairwise matches between source and target segments.\\ 
+
+The inputs are one list of source segment descriptions, and one list of target segment descriptions. This step then outputs a list of potential matches between source and target segments based on their descriptions.\\
 
 \subsection{kNN}
 \label{subsec:kNN}
 
 The simplest matching algorithm considered here, kNN selects the k nearest neighbours according to euclidean distances of a segment description in n-dimensional feature space.\\
 
-According to the definition of an ideal descriptor, this algorithm should be sufficient to recognize true segment matches.\\ 
+In the case of an ideal descriptor, this algorithm is sufficient to recognize true segment matches, even with $k = 1$. As we recall, an ideal descriptor would ensure that all segments taken from a single object in the real world have identical features.\\ 
 
-However, descriptors used here are not ideal and as such better matching results can be obtained by using a more complex matching algorithm.
+For sufficiently good descriptors, this algorithm can also be adequate, predicting mostly true matches and some false matches. One issue with descriptors that are not ideal is that they might not allow to distinguish precisely between objects in the same class.
+
+That is, segments of the class 'car' might be clustered together, with small variation in their descriptors being tied to viewpoints or the area of a car that the segment covers, rather than idiosyncracies in the cars themselves. In this case it can be useful to increase $k$.\\
+
+A common alternative to limiting the number of nearest neighbours with a threshold k, is to limit the nearest neighbours to all that fall within a certain threshold radius $r$. Furthermore, both thresholds can be combined, in order to limit nearest neighbours in both amount and distance.\\
+
+It should be mentioned that the density of description clusters in n-dimensional space is not constant with some descriptors. In those cases, distance in n-dimensional space does not generalize well as a measure of similarity. To illustrate, for some descriptors, the same threshold radius can be very strict (i.e., containing many neighbours however dissimilar) in some regions of n-dimensional space, and not strict at all (i.e., filtering out all neighbours including desired ones) in others.\\
+
+For descriptors which are further from the ideal, better matching results can be obtained by using a more complex matching algorithm than kNN.
 
 \subsection{Random Forests}
 \label{subsec:RF}
@@ -175,6 +194,8 @@ However, descriptors used here are not ideal and as such better matching results
 Random Forests are a Machine Learning algorithm which trains many decision trees simultaneously, then polls them in order to classify input.\\
 
 In our case, the input is a pair of feature vectors belonging to two segments, and the output a boolean describing wether or not they are a match. This output can also instead be a probability of match $p$, with $0 \leq p \leq 1$.
+
+%TODO
 
 \section{Finding Patterns}
 \label{sec:filtering}
@@ -202,18 +223,16 @@ In the online scenario, the goal is to use SegMatch as-we-go in order to attempt
 
 As such, the overall process is to:   
 
-\begin{itemize}
-\item 1. decide when to apply SegMatch
-\item 2. Apply SegMatch between current input and past.
-\item 3. Add resulting segments to the recorded past.
-\end{itemize}
+\begin{enumerate}
+\item Decide on the next instant or location at which to run SegMatch, and wait until it is reached.
+\item Run SegMatch between the current local map and recorded past.
+\item Add resulting segments to the recorded past.
+\end{enumerate}
 
 \subsection{Segmentation Frequency}
 \label{subsec:segmentation-frequency}
 
-The process of segmenting point clouds is one of the more computationally heavy parts of the pipeline. As such, a good strategy for deciding when and how segmentation occurs is critical to good performance.\\
-
-Ideally, ensuring that each point is passed through the segmenter only once, at most twice, is critical to performance. This motivates the development of a well-designed segmentation strategy - that is, a process driving the decision such as which areas of the observed cloud to store, send for segmentation, and when.\\
+The process of segmenting point clouds is one of the more computationally heavy parts of the pipeline. This motivates the development of a well-designed segmentation strategy - that is, a process driving the decision such as which areas of the observed cloud to store, send for segmentation, and when.\\
 
 Regarding time: it is intuited that regions of space should be passed through the segmenter when they are most accurate and dense. This presents a trade-off problem. The longer one waits before segmenting, the worse positioning confidence is, and the larger the uncertainty in the points' fixed frame position (this leads to 'fuzzy' segments).\\
 
