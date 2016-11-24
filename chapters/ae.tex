@@ -20,7 +20,7 @@ The description step was seen as showing the most potential for improvement. In 
 \subsection{Artificial Neural Networks - A Primer}
 \label{subsec:primer}
 
-In this subsection, the unacquainted reader can find a short summary of the concepts used in this project.
+In this subsection, the unacquainted reader can find a short summary of many concepts used in this project.
 
 Another goal of this subsection is to define some terms used later in this chapter, such as terms relating to implementation details (\textit{hidden layer}, \textit{backpropagation}, etc \ldots).
 
@@ -49,9 +49,13 @@ The intuition behind convolutional neural networks is to take advantage of repea
 
 Convolutional layers create small neural network layers, with a reduced amount of inputs $n\times n$ (for example, $n = 5$), commonly referred to as filters. A single filter is applied at each position in the full layer-input $N\times N$, taking the $n\times n$ surrounding values as filter inputs, and outputting a single value.\\
 
-Filters can also be applied with strides, skipping over every k input positions, leading to a reduced size layer-output.\\
+Filters can also be applied with \textit{strides}, meaning that the filter skips over every k input positions, leading to a reduced size layer-output.\\
 
 Thus convolutional layers allow useful pattern learning in the input, with few parameters. On the other hand, convolutions generally require heavier computation. They have shown good results in many tasks, and are quite widespread especially with tasks where repeated patterns are expected in the input (computer vision, audio).\\
+
+\subsubsection{Pooling}
+
+\textit{Pooling} layers reduce the size of their output by applying a hardcoded filter at every position with a stride. For example, a 2x2 \textit{Max pooling} layer has a single max filter of size 2x2, which simply returns the max value of its inputs. This filter is applied with a stride of 2, resulting in an output half the size of the input.\\
 
 \subsubsection{Other Architectures}
 
@@ -69,26 +73,49 @@ More information is available in the authors' paper \cite{adam}, where they also
 
 \subsection{Neural Networks for 3D Segment Classification}
 \label{subsec:voxnet}
-%TODO
-VoxNet
+
+Maturana and Scherer \cite{voxnet} use 3D convolutions in their VoxNet model, in order to classify 3D segments. The motivation of VoxNet was to determine if progresses made through convnets in computer vision tasks could extend to 3D data.\\
+
+VoxNet takes a 32x32x32 occupancy grid as input, and outputs a softmax classification of the segment.\\
+
+Its first two layers are convolutions, wth respectively 32 5x5x5 filters and 32 3x3x3 filters, a 2x2 max pooling layer, a fully connected layer of size 128, and a softmax fully connected output layer of size $K$, $K$ being the number of possible classes to draw a prediction from.\\
+
+Maturana and Scherer found that VoxNet performs at state-of-the-art accuracy.
+
 
 \subsection{Unsupervised Learning with Neural Networks}
 \label{subsec:autoencoder}
 %TODO
-Autoencoder
+
+In the SegMatch case, the present task does not require classification but description. As discussed in Section ~\ref{sec:description}, the description scenario entails no known targets such as in classification, but rather heuristics for relative positions of the segment descriptions. That is to say, the correct output of our model for a given segment is not known in advance. In addition, even if the true ideal description of each segment could be known in advance, there is as of yet no 3D segments dataset with those target descriptions available, which is necessary for supervised training. Creating such a dataset would be a time-consuming task and was not the goal of this project. On top of this, such a dataset might become obsolete as sensor-technology evolves, or when using a different segmentation algorithm.\\
+
+For these reasons, unsupervised training was deemed a more promising method. In unsupervised training, no ground-truth is required to train the model, it can be trained with each new example extracted from the environment, with no processing before-hand.\\
+
+An example of an unsupervised neural network architecture is the Autoencoder, in which an encoder network compresses the input to a small-dimensional representation, and a similar-sized decoder network attempts to decompress the representation back into the original input. The intuition is that, should the network be able to do this for many examples it has not seen before, it will have successfully learnt a meaningful representation of the inputs in n-dimensional space. As the output target is identical to the input, no ground-truth information is required for the training examples, which means that no hand-labeling or label databases are necessary.\\
+
+Other types of unsupervised models exist, such as Adversarial Networks. They do not fall within the scope of this thesis report.
 
 \subsection{Variational Bayes Autoencoder}
 \label{subsec:variational-bayes}
 %TODO
 
+Kingma and Welling \cite{variational-autoencoder} present a modified autoencoder architecture, which shows superior prediction performance and learning efficiency than the standard autoencoder. The variational Bayes autoencoder does not only predict an n-value representation at the encoder output, but parameters to a probabilistic distribution of each of those values. In simplified terms, it can be designed to predict means and variances in the case of a standard distribution. A value is then sampled from each distribution, and the resulting n-values are passed to the decoder network.\\
+
+The second trick in the paper \cite{variational-autoencoder} is to introduce a cost function for the autoencoder output which not only penalizes errors in the reconstruction (through for example cross-entropy loss between output prediction and true probability), but also the Kullback–Leibler divergence of the latent space prediction w.r.t. the true prior distribution in latent space.\\
+
 \section{Implementation}
 \label{sec:ae-implementation}
 
+During the course of this project, we implemented a model in Tensorflow \cite{tensorflow}, and included it in the SegMatch algorithm.\\
+
+The model comes in two architectures, with and without 3-dimensional convolutions.\\
+
+In the meantime, a preprint paper by Brock et al.  \cite{voxel-autoencoder} briefly presents successful results on datasets using Variational Autoencoders for reconstructing Voxelized 3D data.
 %TODO
-Performance
 GPU Speedup
 
 \section{Results}
 \label{sec:ae-results}
 
+ModelNet database \cite{modelnet}
 
