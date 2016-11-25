@@ -215,6 +215,17 @@ An intuition is that the accurate architecture, due to having 3D convolutions, w
   \label{fig:fastvaccurate-features}
 \end{figure}
 
+The KL-Divergence term in the variationaly Bayes autoencoder loss function acts as a regularizer, penalizing high values of the latent space predictions unless they lead to improved reconstruction cost. As a simplification, this means that the latent space values tend to be 'attracted' towards zero, while the reconstruction error makes them 'attracted' towards clusters of similar segments.\\
+
+This effect is partly responsible for the unused features seen in Fig.~\ref{fig:fastvaccurate-features}. It also has as a consequence the fact that segments which the autoencoder can not recognize and reconstruct with high confidence tend to show lower average values overall in the latent space (visible in Fig.~\ref{fig:avg-abs-features}: segments of unknown class are harder to recognize for both human and autoencoder, as many resemble random 3d noise.)
+
+\begin{figure}
+  \centering
+  \includegraphics[width=5.2in]{images/avg_abs_features.png}
+  \caption{Average absolute values of latent space representations for segments in the KITTI drive 18 extracted segments. Class labels are assigned by hand, the 'unknown' class qualifies objects which were not recognized by a human.}
+  \label{fig:avg-abs-features}
+\end{figure}
+
 \subsection{In-the-loop Results}
 
 \begin{figure}
@@ -224,6 +235,8 @@ An intuition is that the accurate architecture, due to having 3D convolutions, w
   \label{fig:kitti20-performance}
 \end{figure}
 
-False to True LC ratio - autoencoder: 0.022869022869\\
-False to True LC ratio - eigenvalues: 0.0223642172524\\
+The results of tests comparing the SegMatchAE algorithms versus the standard SegMatch algorithm (eigenvalue-based description) are shown in Fig.~\ref{fig:kitti20-performance}. In addition, the following ratios were calculated:\\
+
+Autoencoder false to true LC ratio: 0.022869022869\\
+Eigenvalues false to true LC ratio: 0.0223642172524\\
 

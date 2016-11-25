@@ -6,7 +6,14 @@
 %TODO
 Intro and General Pipeline\\
 
-Specific Pipeline, example relocalizer, onlinematcher\\
+\begin{figure}
+  \centering
+  \includegraphics[width=5.2in]{images/pipeline.pdf}
+  \caption{The SegMatch pipeline}
+  \label{fig:pipeline}
+\end{figure}
+
+TODO: Specific Pipeline, example relocalizer, onlinematcher\\
 
 \section{Input}
 \label{sec:input}
@@ -277,6 +284,7 @@ This affords a relatively simple implementation, with the added advantage that i
   \caption{The segmentation queue. Collectors shown in red, with the latest local map filtered to a cylinder visible at the right.}
   \label{fig:seg-queue}
 \end{figure}
+
 Fig.~\ref{fig:seg-queue} illustrates the process of online segmentation described above.
 \subsection{Filtering Segments}
 
@@ -304,5 +312,38 @@ These duplicate matches are detrimental to the Geometrical Clustering step, eith
 \section{Results}
 \label{sec:segmatch-results}
 
-Influence of parameters
+\begin{figure}
+  \centering
+  \includegraphics[width=5.2in]{images/segmatchae.png}
+  \caption{Successful SegMatch loop closure detection on KITTI drive 20.}
+  \label{fig:segmatch-loop-closure}
+\end{figure}
+
+
+% \begin{figure*}[!t]
+% \centering
+% \subfloat[]{
+% \includegraphics[width=2.9in]{images/before_segmatch.pdf}
+% \label{fig_online_before_optimization}}
+% \hfil
+% \subfloat[]{
+% \includegraphics[width=3.2in]{images/after_segmatch.pdf}
+% \label{fig_online_after_optimization}}
+% \caption{Recorded trajector before (left) and after (right) being corrected with SegMatch loop closures. This image is taken from Dubé \cite{segmatch}.}
+% \label{fig_online_before_optimization}
+% \end{figure*}
+
+\begin{figure}[!tbp]
+  \centering
+  \begin{minipage}[b]{0.4\textwidth}
+    \includegraphics[width=\textwidth]{images/before_segmatch.pdf}
+  \end{minipage}
+  \hfill
+  \begin{minipage}[b]{0.4\textwidth}
+    \includegraphics[width=\textwidth]{images/after_segmatch.pdf}
+  \end{minipage}
+  \caption{Recorded trajector before (left) and after (right) being corrected with SegMatch loop closures. This image is taken from Dubé \cite{segmatch}}
+\end{figure}
+
+\subsection{Influence of parameters}
 %TODO
