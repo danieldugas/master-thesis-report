@@ -150,14 +150,63 @@ In both architectures, the latent space size is set to 15. To these 15 values pr
 \section{Performance}
 \label{sec:ae-performance}
 
-On a desktop computer with no GPU, we measure that the fast model takes on average <100 ms to encode 100 segments. The accurate model takes on average 20 seconds. Voxelizing these segments takes around 20 ms.
+On a desktop computer with no GPU, we measure that the fast model takes on average $<$100 ms to encode 100 segments. The accurate model takes on average 20 seconds. Voxelizing 100 segments takes around 20 ms.\\
 
 With GPU enabled, a 20x speedup is measured on average for the accurate model during training. For encoding, a more modest speedup of around 5x is observed.
 
 \section{Results}
 \label{sec:ae-results}
 
-An intuition is that the accurate architecture, due to having 3D convolutions, would be able to more efficiently compress segment representations in the latent space. Our observations show that on average the accurate model keeps 3 latent dimensions unused, whereas the fast model keeps 1 unused (see Fig.~\ref{fig:fastvaccurate-features}). This goes in accordance with our expectations.\\
+\subsection{Segment Reconstructions}
+
+Our measurements show greater accuracy for the accurate model architecture, as expected (See Fig.~\ref{fig:trainingcost}).\\
+
+\begin{figure}
+  \centering
+  \includegraphics[width=3.2in]{images/trainingcost.png}
+  \caption{Comparison of valdidation cost for the fast and accurate architectures, when the same training regime is applied to both, shows that the accurate architecture generalizes better and with greater reconstruction accuracy.}
+  \label{fig:trainingcost}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=5.2in]{images/convreconstructions.pdf}
+  \caption{Comparison of valdidation cost for the fast and accurate architectures, when the same training regime is applied to both, shows that the accurate architecture generalizes better and with greater reconstruction accuracy.}
+  \label{fig:trainingcost}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=5.2in]{images/noconvreconstructions.pdf}
+  \caption{Comparison of valdidation cost for the fast and accurate architectures, when the same training regime is applied to both, shows that the accurate architecture generalizes better and with greater reconstruction accuracy.}
+  \label{fig:trainingcost}
+\end{figure}
+
+A preprint paper by Brock et al.  \cite{voxel-autoencoder}, published while this project was underway,  mentions successful results on datasets using Variational Autoencoders for reconstructing Voxelized 3D data.
+Brock et al. \cite{voxel-autoencoder} report that ``The model attains a 99.39\% true positive and 92.36\% true negative reconstruction accuracy on the ModelNet10 test set, indicating that it learns to reconstruct with high fidelity, but tends to slightly overestimate the probability of a voxel being present. ''\\
+
+In our own experiments, we run the autoencoder on an arbitrary voxelized segment, producing a voxelized reconstruction. The reconstruction is then passed as input to the autoencoder, outputting a reconstruction-reconstruction, and so on 60 times. The goal was to see if the reconstructions tended to converge to a particular shape. We observed that with every iteration, the output prediction contains on average more occupied voxels, resulting in a final reconstruction which is a completely filled voxel. This agrees with the statement from Brock et al. \cite{voxel-autoencoder} quoted in the previous paragraph, which observes that the model ``tends to slightly overestimate the probability of a voxel being present.''\\
+
+Experiments on the ModelNet database \cite{modelnet}, also show reconstruction results in accordance with Brock et al.'s observations.
+
+
+\subsection{Latent Space}
+
+An intuition is that the accurate architecture, due to having 3D convolutions, would be able to more efficiently compress segment representations in the latent space. Our observations show that on average the accurate model keeps 3 latent dimensions unused, whereas the fast model keeps 1 dimension unused (see Fig.~\ref{fig:fastvaccurate-features}). This goes in accordance with our expectations.\\
+
+\begin{figure}
+  \centering
+  \includegraphics[width=5.2in]{images/t-sne.png}
+  \caption{T-SNE projection of the latent space representations for 1000 segments in the KITTI drive 18 dataset.}
+  \label{fig:fastvaccurate-features}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=5.2in]{images/t-sne_matches.png}
+  \caption{Segment ground truth matches collected during the KITTI drive 18 run, overlaid on their T-SNE projection.}
+  \label{fig:fastvaccurate-features}
+\end{figure}
 
 \begin{figure}
   \centering
@@ -166,9 +215,15 @@ An intuition is that the accurate architecture, due to having 3D convolutions, w
   \label{fig:fastvaccurate-features}
 \end{figure}
 
-A preprint paper by Brock et al.  \cite{voxel-autoencoder}, published while this project was underway,  mentions successful results on datasets using Variational Autoencoders for reconstructing Voxelized 3D data.
-Brock et al. \cite{voxel-autoencoder} report that ``The model attains a 99.39\% true positive and 92.36\% true negative reconstruction accuracy on the ModelNet10 test set, indicating that it learns to reconstruct with high fidelity, but tends to slightly overestimate the probability of a voxel being present. ''\\
+\subsection{In-the-loop Results}
 
-In our own experiments, we run the autoencoder on an arbitrary voxelized segment, producing a voxelized reconstruction. The reconstruction is then passed as input to the autoencoder, outputting a reconstruction-reconstruction, and so on 60 times. The goal was to see if the reconstructions tended to converge to a particular shape. We observed that with every iteration, the output prediction contains on average more occupied voxels, resulting in a final reconstruction which is a completely filled voxel. This agrees with the statement from Brock et al. \cite{voxel-autoencoder} quoted in the previous paragraph, which observes that the model ``tends to slightly overestimate the probability of a voxel being present.''
+\begin{figure}
+  \centering
+  \includegraphics[width=5.2in]{images/kitti20performance.pdf}
+  \caption{Accumulated loop closures during 100 runs of SegMatch on the same dataset (KITTI drive 20)}
+  \label{fig:kitti20-performance}
+\end{figure}
 
-Experiments on the ModelNet database \cite{modelnet}, also show reconstruction results in accordance with Brock et al.'s observations.
+False to True LC ratio - autoencoder: 0.022869022869\\
+False to True LC ratio - eigenvalues: 0.0223642172524\\
+
