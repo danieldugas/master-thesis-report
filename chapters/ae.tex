@@ -110,12 +110,23 @@ During the course of this project, we implemented a model in Tensorflow \cite{te
 
 The model comes in two architectures, with and without 3-dimensional convolutions.\\
 
-In the meantime, a preprint paper by Brock et al.  \cite{voxel-autoencoder} briefly presents successful results on datasets using Variational Autoencoders for reconstructing Voxelized 3D data.
+\begin{figure}
+  \centering
+  \includegraphics[width=5.2in]{images/architecture.pdf}
+  \caption{The SegMatchAE autoencoder architectures. a) The fast architecture. b) The accurate architecture}
+  \label{fig:architecture}
+\end{figure}
+
 %TODO
 GPU Speedup
 
 \section{Results}
 \label{sec:ae-results}
 
-ModelNet database \cite{modelnet}
+ModelNet database \cite{modelnet}\\
+
+A preprint paper by Brock et al.  \cite{voxel-autoencoder}, published while this project was underway,  mentions successful results on datasets using Variational Autoencoders for reconstructing Voxelized 3D data.
+Brock et al. \cite{voxel-autoencoder} report that ``The model attains a 99.39\% true positive and 92.36\% true negative reconstruction accuracy on the ModelNet10 test set, indicating that it learns to reconstruct with high fidelity, but tends to slightly overestimate the probability of a voxel being present. ''\\
+
+In our own experiments, we run the autoencoder on an arbitrary voxelized segment, producing a voxelized reconstruction. The reconstruction is then passed as input to the autoencoder, outputting a reconstruction-reconstruction, and so on 60 times. The goal was to see if the reconstructions tended to converge to a particular shape. We observed that with every iteration, the output prediction contains on average more occupied voxels, resulting in a final reconstruction which is a completely filled voxel. This agrees with the statement from Brock et al. \cite{voxel-autoencoder} quoted in the previous paragraph, which observes that the model ``tends to slightly overestimate the probability of a voxel being present.''
 
