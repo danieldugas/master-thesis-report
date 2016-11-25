@@ -235,8 +235,17 @@ This effect is partly responsible for the unused features seen in Fig.~\ref{fig:
   \label{fig:kitti20-performance}
 \end{figure}
 
-The results of tests comparing the SegMatchAE algorithms versus the standard SegMatch algorithm (eigenvalue-based description) are shown in Fig.~\ref{fig:kitti20-performance}. In addition, the following ratios were calculated:\\
+An experiment was run in order to compare the SegMatchAE algorithms versus the standard SegMatch algorithm (eigenvalue-based description). In this experiment, all parameters were kept identical for both trials, which were run on the same dataset. The only difference between trials being the description and matching algorithms used (eigenvalues + knn + RF vs. autoencoder + knn). In order to capture statistically significant measures of performance, 100 trials were run for each algorithm. These were run in real-time to ensure practical usefulness. The observed performance marker was the amount of successful loop closures found by each algorithm.\\ 
 
-Autoencoder false to true LC ratio: 0.022869022869\\
-Eigenvalues false to true LC ratio: 0.0223642172524\\
+A notable parameter value for this experiment was a relatively low nearest neighbour tolerance ($k=2$). This value was selected in order to limit the influence of geometric consistency filtering on the results. For other parameters (segmentation radius, spatial frequency, etc \ldots), usual values (which we have empirically associated to as-good-as-possible performance) were selected.\\
+
+The experiment results are shown in Fig.~\ref{fig:kitti20-performance}. In addition, the following ratios of false to true loop closures were measured:\\
+
+Autoencoder + knn false-to-true loop-closure ratio: 0.022869022869\\
+Eigenvalues + knn + RF false-to-true loop-closure ratio: 0.0223642172524\\
+
+We believe that this experiment favors the hypothesis that the autoencoder models trained in this project are indeed good descriptors.\\
+
+An experiment with the ensemble of shape descriptor was considered, however the descriptor was too slow to run in real-time on the dataset.\\
+
 
