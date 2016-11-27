@@ -24,7 +24,7 @@ It sometimes happen that the target input is already segmented and described (se
 
 In any case, the Segmentation and Description steps are performed identically whether their input is the source or target cloud.\\
 
-Usually, LiDAR sensors do not produce ready-made point clouds of the local area, and it may be necessary to consider the following subsections, \ref{subsec:sensordata}, \ref{subsec:distortion}, \ref{subsec:artefacts}, and \ref{subsec:SLAM}, to understand how raw sensor data can be transformed into SegMatch input.
+Usually, LiDAR sensors do not produce ready-made point clouds of the local area, and it may be necessary to consider this section's next subsections, \ref{subsec:sensordata}, \ref{subsec:distortion}, \ref{subsec:artefacts}, and \ref{subsec:SLAM}, to understand how raw sensor data can be transformed into SegMatch input.
 
 \subsection{Sensor Data}
 \label{subsec:sensordata}
@@ -312,6 +312,16 @@ These duplicate matches are detrimental to the Geometrical Clustering step, eith
 \section{Results}
 \label{sec:segmatch-results}
 
+\subsection{Influence of parameters}
+
+This subsection evaluates the influence of algorithm parameters on the output.\\
+%TODO
+
+\subsection{Loop closures}
+
+We were able to demonstrate loop closure capabilities with SegMatch, with minimal parameter tuning.
+%TODO
+
 \begin{figure}
   \centering
   \includegraphics[width=5.2in]{images/segmatchae.png}
@@ -319,19 +329,7 @@ These duplicate matches are detrimental to the Geometrical Clustering step, eith
   \label{fig:segmatch-loop-closure}
 \end{figure}
 
-
-% \begin{figure*}[!t]
-% \centering
-% \subfloat[]{
-% \includegraphics[width=2.9in]{images/before_segmatch.pdf}
-% \label{fig_online_before_optimization}}
-% \hfil
-% \subfloat[]{
-% \includegraphics[width=3.2in]{images/after_segmatch.pdf}
-% \label{fig_online_after_optimization}}
-% \caption{Recorded trajector before (left) and after (right) being corrected with SegMatch loop closures. This image is taken from Dubé \cite{segmatch}.}
-% \label{fig_online_before_optimization}
-% \end{figure*}
+Fig.~\ref{fig:corrected}.\\
 
 \begin{figure}[!tbp]
   \centering
@@ -342,8 +340,7 @@ These duplicate matches are detrimental to the Geometrical Clustering step, eith
   \begin{minipage}[b]{0.4\textwidth}
     \includegraphics[width=\textwidth]{images/after_segmatch.pdf}
   \end{minipage}
-  \caption{Recorded trajector before (left) and after (right) being corrected with SegMatch loop closures. This image is taken from Dubé \cite{segmatch}}
+  \caption{Recorded trajectory before (left) and after (right) being corrected with SegMatch loop closures. This image is taken from Dubé \cite{segmatch}}
+  \label{fig:corrected}
 \end{figure}
 
-\subsection{Influence of parameters}
-%TODO

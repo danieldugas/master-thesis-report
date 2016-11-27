@@ -1,26 +1,31 @@
 \chapter{Introduction}
 \label{sec:introduction}
 
-\section{Motivation for Range-Based SLAM}
+\section{Motivation for Range-Based SLAM Loop Closures}
 \label{sec:motivation}
 
-Range-based sensors allow for confidence in actual distance between sensor and objects. As a result, they are, and or are becoming common in scenarios where failure to properly identify the depth of objects in the scenery can lead to serious damage and consequences.\\%TODO cite self driving cars
+When mapping the environment, in the absence of global positioning information, or other mechanisms to prevent errors from accumulating, drift will inevitably occur. Loop closures are such a mechanism of error correction, where recognition of previously visited environment allows knowledge of one's relative position to be updated.\\ 
 
-Though vision-based SLAM is a thoroughly investigated topic, the data produced by range sensors is usually quite qualitatively different from 2D data, or vision-extracted 3D data. Registration patterns (such as scan-lines visible in data taken by rotating-LiDAR), for example, are a challenge which particularly affects range-based data.\\
+This project examined specifically the implementation of such a method in the case where mapping is performed on data collected by a range-based sensor.\\
 
-Motivation for SegMatch
+Range-based sensors allow for consistent depth-measurement, and can do so in environments where vision-based sensors become untrustworthy due to illumination or weather. Often, vision based sensors requires relatively complex algorithms to estimate depth. Range sensors can thus be necessary in scenarios where robust depth information is important.\\
+
+When mapping the environment with a range-based sensor, the same algorithms as for vision-based mapping can not be used with similar success. A cause is the difference in the data produced by both sensors. As a result, even though algorithms for vision-based loop closures have been demonstrated, to our knowledge, no mature range-based equivalent exists.\\
+
+\section{State-of-the-Art}
+\label{sec:SOTA}
+
+Parallel: Vision-based\\
+Google Cartographer\\
+Keypoint Matching\\
+
+\section{Motivations for SegMatch}
 
 Segments save space
 
-Motivation for SegMatchAE
+\section{Motivations for SegMatchAE}
 
 Generalization
 Unsupervised
 Less heuristic-based
 
-\section{State-of-the-Art}
-\label{sec:SOTA}
-
-Google Cartographer\\
-Keypoint Matching\\
-Parallel: Vision-based\\
