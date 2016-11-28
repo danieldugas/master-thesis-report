@@ -15,7 +15,6 @@ The description step was seen as showing the most potential for improvement. In 
 
 \section{Neural Networks for 3D Segment Recognition}
 \label{sec:neural-nets}
-%TODO
 
 \subsection{Artificial Neural Networks - A Primer}
 \label{subsec:primer}
@@ -147,6 +146,8 @@ The fast architecture consists of the input layer, two fully connected layers (4
 
 In both architectures, the latent space size is set to 15. To these 15 values predicted by the autoencoder for segment representations, are concatenated 3 dimensional scales, for $x$, $y$, and $z$, which are calculated during voxelization. These are added because the voxelization step scales all segments to fit inside the occupancy grid. Thus, the autoencoder is given dimensionless input in $x$, $y$, and $z$ directions. As such, unless the autoencoder guesses the common size of segments based on other indicators (there is reason to believe that it does not: such information would not improve its reconstruction accuracy, nor do we give it any data during training that would allow such properties to be learnt), size information of the segment would be lost. This gives the SegMatch autoencoder descriptor a total of 18 features.\\
 
+The value of 15 for the latent space dimension was selected by a process of trial and error (See Annex Section \ref{sec:latent_space_size}).\\
+
 \subsection{Training}
 \label{subsec:ae-training}
 
@@ -206,6 +207,7 @@ Experiments on the ModelNet database \cite{modelnet}, also show reconstruction r
 
 
 \subsection{Latent Space}
+\label{subsec:latent_space}
 
 In order to visualize the autoencoder latent space, T-SNE was used to project from n-dimensional to 2-dimensional space.\\
 
@@ -272,7 +274,7 @@ An experiment was run in order to compare the SegMatchAE algorithms versus the s
 
 A notable parameter value for this experiment was a relatively low nearest neighbour tolerance ($k=2$). This value was selected in order to limit the influence of geometric consistency filtering on the results. For other parameters (segmentation radius, spatial frequency, etc \ldots), usual values (which we have empirically associated to as-good-as-possible performance) were selected.\\
 
-The experiment results are shown in Fig.~\ref{fig:kitti20-performance}. In addition, the following ratios of false to true loop closures were measured:\\
+The experiment results are shown in Fig.~\ref{fig:kitti20_performance}. In addition, the following ratios of false to true loop closures were measured:\\
 
 Autoencoder + knn false-to-true loop-closure ratio: 0.022869022869\\
 Eigenvalues + knn + RF false-to-true loop-closure ratio: 0.0223642172524\\
@@ -287,6 +289,3 @@ A similar experiment with the ensemble of shape descriptor was considered, howev
 \end{figure}
 
 We believe that this experiment favors the hypothesis that the autoencoder models trained in this project are indeed good descriptors.\\
-
-
-

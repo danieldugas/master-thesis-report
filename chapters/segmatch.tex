@@ -4,7 +4,7 @@
 \section{Intro \& Pipeline}
 \label{sec:intro-pipeline}
 %TODO
-Intro and General Pipeline\\
+The SegMatch algorithm is constituted of 5 main steps, data input, segmentation, description, matching, and geometric filtering. These 5 steps are illustrated in the usual SegMatch pipeline, as shown in Fig.~\ref{fig:pipeline}.\\
 
 \begin{figure}
   \centering
@@ -13,7 +13,28 @@ Intro and General Pipeline\\
   \label{fig:pipeline}
 \end{figure}
 
-TODO: Specific Pipeline, example relocalizer, onlinematcher\\
+SegMatch can be used in a variety of situations where place recognition from range data is useful. Though the usual SegMatch algorithm (Fig.~\ref{fig:pipeline}) remains applicable to all such situations, there can be differences in how SegMatch should be integrated to the general pipeline, to interact with other robot or computer processes. Examples pipelines are given in Figures~\ref{fig:online_pipeline}, ~\ref{fig:offline_pipeline}, and ~\ref{fig:multirobot_pipeline} to showcase various uses of the SegMatch algorithm.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=5.2in]{images/Online Pipeline.pdf}
+  \caption{An example of a simplified pipeline for using SegMatch online.}
+  \label{fig:online_pipeline}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=5.2in]{images/Offline Pipeline.pdf}
+  \caption{An example of a simplified pipeline for using SegMatch offline.}
+  \label{fig:offline_pipeline}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=5.2in]{images/Multi-Robot Pipeline.pdf}
+  \caption{An example of a simplified pipeline for using SegMatch online when several robots are exploring the same environment.}
+  \label{fig:multirobot_pipeline}
+\end{figure}
 
 \section{Input}
 \label{sec:input}
@@ -217,7 +238,7 @@ The clusters which remain, those consistuting of 3 or more matches, are loop clo
 \section{Applying SegMatch - Online Example}
 \label{sec:online}
 
-Thus far into this chapter, the general steps of the SegMatch algorithm have been presented. SegMatch can be applied to several situations, as outlined in Section \ref{sec:intro-pipeline}, without needing to modify any of the steps in the above sections.\\
+Thus far into this chapter, the usual steps of the SegMatch algorithm have been presented. SegMatch can be applied to several situations, as outlined in Section \ref{sec:intro-pipeline}, without needing to modify any of the steps in the above sections.\\
 
 What does change between implementations is \textit{when} to run SegMatch, \textit{what data} is to be taken as input, and of course the parameters.\\
 
