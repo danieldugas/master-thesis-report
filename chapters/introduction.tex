@@ -1,6 +1,10 @@
 \chapter{Introduction}
 \label{sec:introduction}
 
+This report is structured as follows: Chapter \ref{chap:segmatch} describes the implementations details of the segment-based loop closure algorithm which was developped during this project, and its usefulness and performance. The presented loop closure algorithm is from this point on referred to as SegMatch. SegMatch is also described and evaluated in Dubé \cite{segmatch}.\\
+
+Chapter \ref{chap:ae} explores the development of a learning-based enhancement to SegMatch, allowing a module of the algorithm to learn useful segment descriptions in an unsupervised fashion. The enhancement is implemented and tested, and the results are discussed. The enhanced SegMatch algorithm, with autoencoder-based description is from here on out referred to as SegMatchAE.\\
+
 \section{Motivation for Range-Based SLAM Loop Closures}
 \label{sec:motivation}
 
@@ -22,6 +26,8 @@ Keypoint Matching\\
 \section{Motivations for SegMatch}
 
 Segments save space
+
+The use of segments for place recognition has several useful properties.
 
 \section{Motivations for SegMatchAE}
 

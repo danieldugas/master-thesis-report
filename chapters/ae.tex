@@ -1,5 +1,5 @@
 \chapter{SegMatchAE}
-\label{chap:segmatchAE}
+\label{chap:ae}
 
 This Chapter details the work following the implementation of SegMatch. In this part of the project, the goal was to design and implement a learning descriptor, that would improve the quality of descriptions and matches.\\
 
@@ -147,12 +147,27 @@ The fast architecture consists of the input layer, two fully connected layers (4
 
 In both architectures, the latent space size is set to 15. To these 15 values predicted by the autoencoder for segment representations, are concatenated 3 dimensional scales, for $x$, $y$, and $z$, which are calculated during voxelization. These are added because the voxelization step scales all segments to fit inside the occupancy grid. Thus, the autoencoder is given dimensionless input in $x$, $y$, and $z$ directions. As such, unless the autoencoder guesses the common size of segments based on other indicators (there is reason to believe that it does not: such information would not improve its reconstruction accuracy, nor do we give it any data during training that would allow such properties to be learnt), size information of the segment would be lost. This gives the SegMatch autoencoder descriptor a total of 18 features.\\
 
+\subsection{Training}
+\label{subsec:ae-training}
+
+A model was trained for each architecture, fast and accurate.\\
+
+The training data were segments extracted during SegMatch runs on the KITTI datasets (drive 18, 20, 27), which results in over 6000 unique 3D segments.\\
+
+In addition, each segment was rotated according to 32 rotation angles distributed linearly from 0 to 2$\pi$, resulting in a total of a little over 192000 examples. The first 400 original segments and their rotations - a total of 12800 examples - were used as a validation dataset, and the remaining were used as training examples.\\
+
 \section{Performance}
 \label{sec:ae-performance}
 
-On a desktop computer with no GPU, we measure that the fast model takes on average $<$100 ms to encode 100 segments. The accurate model takes on average 20 seconds. Voxelizing 100 segments takes around 20 ms.\\
+On a desktop computer with no GPU, we measure that the fast model requires on average 100 ms to encode 100 segments.\\
 
-With GPU enabled, a 20x speedup is measured on average for the accurate model during training. For encoding, a more modest speedup of around 5x is observed.
+The accurate model requires on average 20 seconds to encode 100 segments. With GPU enabled, a 20x speedup is measured on average for the accurate model during training. For encoding, a more modest speedup of around 5x is observed.\\
+
+Voxelizing 100 segments was measured to require on average 20 ms.\\
+
+In addition, the total autoencoder descriptor latency is affected by some data transfer overhead between python and C++. We were able to reduce the round-trip overhead (C++ to python, then python to C++) to an average of 250ms for 100 segments.\\
+
+As such the total descriptor time when using the fast model within SegMatchAE was measured as 350ms on average, well within the required latency times required to run SegMatch online on all our available datasets.\\
 
 \section{Results}
 \label{sec:ae-results}
@@ -192,48 +207,66 @@ Experiments on the ModelNet database \cite{modelnet}, also show reconstruction r
 
 \subsection{Latent Space}
 
-An intuition is that the accurate architecture, due to having 3D convolutions, would be able to more efficiently compress segment representations in the latent space. Our observations show that on average the accurate model keeps 3 latent dimensions unused, whereas the fast model keeps 1 dimension unused (see Fig.~\ref{fig:fastvaccurate-features}). This goes in accordance with our expectations.\\
+In order to visualize the autoencoder latent space, T-SNE was used to project from n-dimensional to 2-dimensional space.\\
+
+First, SegMatch was run on the KITTI drive 18 dataset, and the collected segments were extracted to a database. In addition, the matches found by SegMatch during this run were verified by human eye to be true matches between segments representing identical objects in the environment, and extracted. The results of T-SNE analysis on the segments' autoencoder encodings (fast architecture) are shown in Fig.~\ref{fig:tsne}. It should be noted that the scale features mentioned in Section \ref{sec:ae-implementation} are not included. In addition, the collected ground truth matches between segments were overlaid onto the T-SNE projection of their descriptions, as thin black lines collecting descriptions of matching segment pairs. The result is visible in Fig.~\ref{fig:tsne_matches}.\\
+
+For comparison, the same process as in the above paragraph was applied to the same segments, using their eigenvalue-based descriptions instead of autoencoder descriptions. The resulting T-SNE projection and matches are visible in Fig.~\ref{fig:tsne_eig} and Fig.~\ref{fig:tsne_matches_eig} respectively.\\
+
+In order to visualize the distribution of values in the autoencoder latent space, the encoding a large number of segments were plotted, showing each segment's 15-value latent space representation as a stepfunction plot. This process was applied to both the fast architecture descriptions, and the accurate architecture descriptions. The resulting plots are displayed side-to-side in Fig.~\ref{fig:fastvaccurate_features}.
+
+Another analysis of the latent space was made, looking at the average absolute value of each latent space dimension for the different segment class. This was done in order to detect if particular classes were on average encoded closer to the origin in the 15-dimensional latent space. The resulting data is visible in Fig.~\ref{fig:avg_abs_features}.\\
+
 
 \begin{figure}
   \centering
   \includegraphics[width=5.2in]{images/t-sne.png}
-  \caption{T-SNE projection of the latent space representations for 1000 segments in the KITTI drive 18 dataset.}
-  \label{fig:fastvaccurate-features}
+  \caption{T-SNE projection of the latent space representations for 1187 segments extracted from the KITTI drive 18 dataset.}
+  \label{fig:tsne}
 \end{figure}
 
 \begin{figure}
   \centering
   \includegraphics[width=5.2in]{images/t-sne_matches.png}
-  \caption{Segment ground truth matches collected during the KITTI drive 18 run, overlaid on their T-SNE projection.}
-  \label{fig:fastvaccurate-features}
+  \caption{Segment ground truth matches collected during the KITTI drive 18 run, overlaid on the T-SNE projection of their autoencoder description.}
+  \label{fig:tsne_matches}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=5.2in]{images/t-sne_eig.png}
+\caption{T-SNE projection of the eigenvalue descriptions for the same 1187 segments as in Fig.~\ref{fig:t-sne}}
+  \label{fig:tsne_eig}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=5.2in]{images/t-sne_matches_eig.png}
+\caption{Segment ground truth matches collected during the KITTI drive 18 run, overlaid on the T-SNE projection of their eigenvalue-based description.}
+  \label{fig:tsne_matches_eig}
 \end{figure}
 
 \begin{figure}
   \centering
   \includegraphics[width=5.2in]{images/fastvaccuratefeatures.pdf}
-  \caption{Comparison of the latent space representations for over 1000 segments from the KITTI drive 18 dataset.}
-  \label{fig:fastvaccurate-features}
+  \caption{Comparison of the latent space representations for 1187 segments extracted from the KITTI drive 18 dataset.}
+  \label{fig:fastvaccurate_features}
 \end{figure}
 
-The KL-Divergence term in the variationaly Bayes autoencoder loss function acts as a regularizer, penalizing high values of the latent space predictions unless they lead to improved reconstruction cost. As a simplification, this means that the latent space values tend to be 'attracted' towards zero, while the reconstruction error makes them 'attracted' towards clusters of similar segments.\\
+An intuition is that the accurate architecture, due to having 3D convolutions, would be able to more efficiently compress segment representations in the latent space. Our observations show that on average the accurate model keeps 3 latent dimensions unused, whereas the fast model keeps 1 dimension unused (see Fig.~\ref{fig:fastvaccurate_features}). This goes in accordance with our expectations.\\
 
-This effect is partly responsible for the unused features seen in Fig.~\ref{fig:fastvaccurate-features}. It also has as a consequence the fact that segments which the autoencoder can not recognize and reconstruct with high confidence tend to show lower average values overall in the latent space (visible in Fig.~\ref{fig:avg-abs-features}: segments of unknown class are harder to recognize for both human and autoencoder, as many resemble random 3d noise.)
+The KL-Divergence term in the variational Bayes autoencoder loss function acts as a regularizer, penalizing high values of the latent space predictions unless they lead to improved reconstruction cost. As a simplification, this means that the latent space values tend to be 'attracted' towards zero, while the reconstruction error makes them 'attracted' towards clusters of similar segments.\\
+
+This effect is partly responsible for the unused features seen in Fig.~\ref{fig:fastvaccurate_features}. Another consequence of this effect, is the fact that segments which the autoencoder can not recognize and reconstruct with high confidence tend to show lower average values overall in the latent space (visible in Fig.~\ref{fig:avg_abs_features}: segments of unknown class are harder to recognize for both human and autoencoder, as many resemble random 3d noise.)
 
 \begin{figure}
   \centering
   \includegraphics[width=5.2in]{images/avg_abs_features.png}
   \caption{Average absolute values of latent space representations for segments in the KITTI drive 18 extracted segments. Class labels are assigned by hand, the 'unknown' class qualifies objects which were not recognized by a human.}
-  \label{fig:avg-abs-features}
+  \label{fig:avg_abs_features}
 \end{figure}
 
 \subsection{In-the-loop Results}
-
-\begin{figure}
-  \centering
-  \includegraphics[width=5.2in]{images/kitti20performance.pdf}
-  \caption{Accumulated loop closures during 100 runs of SegMatch on the same dataset (KITTI drive 20)}
-  \label{fig:kitti20-performance}
-\end{figure}
 
 An experiment was run in order to compare the SegMatchAE algorithms versus the standard SegMatch algorithm (eigenvalue-based description). In this experiment, all parameters were kept identical for both trials, which were run on the same dataset. The only difference between trials being the description and matching algorithms used (eigenvalues + knn + RF vs. autoencoder + knn). In order to capture statistically significant measures of performance, 100 trials were run for each algorithm. These were run in real-time to ensure practical usefulness. The observed performance marker was the amount of successful loop closures found by each algorithm.\\ 
 
@@ -244,8 +277,16 @@ The experiment results are shown in Fig.~\ref{fig:kitti20-performance}. In addit
 Autoencoder + knn false-to-true loop-closure ratio: 0.022869022869\\
 Eigenvalues + knn + RF false-to-true loop-closure ratio: 0.0223642172524\\
 
+A similar experiment with the ensemble of shape descriptor was considered, however the descriptor was too slow to run in real-time on the dataset.\\
+
+\begin{figure}
+  \centering
+  \includegraphics[width=5.2in]{images/kitti20performance.pdf}
+  \caption{Accumulated loop closures during 100 runs of SegMatch on the same dataset (KITTI drive 20)}
+  \label{fig:kitti20_performance}
+\end{figure}
+
 We believe that this experiment favors the hypothesis that the autoencoder models trained in this project are indeed good descriptors.\\
 
-An experiment with the ensemble of shape descriptor was considered, however the descriptor was too slow to run in real-time on the dataset.\\
 
 
