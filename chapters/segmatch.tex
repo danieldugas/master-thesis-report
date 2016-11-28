@@ -1,7 +1,9 @@
 \chapter{SegMatch}
 \label{chap:segmatch}
 
-\section{Intro \& Pipeline}
+The present chapter first explains each step in the SegMatch algorithm, then details the implementation of SegMatch in an online scenario, and finally discusses the results produced by the algorithm's implementation.
+
+\section{Pipeline}
 \label{sec:intro-pipeline}
 %TODO
 The SegMatch algorithm is constituted of 5 main steps, data input, segmentation, description, matching, and geometric filtering. These 5 steps are illustrated in the usual SegMatch pipeline, as shown in Fig.~\ref{fig:pipeline}.\\
@@ -13,28 +15,29 @@ The SegMatch algorithm is constituted of 5 main steps, data input, segmentation,
   \label{fig:pipeline}
 \end{figure}
 
-SegMatch can be used in a variety of situations where place recognition from range data is useful. Though the usual SegMatch algorithm (Fig.~\ref{fig:pipeline}) remains applicable to all such situations, there can be differences in how SegMatch should be integrated to the general pipeline, to interact with other robot or computer processes. Examples pipelines are given in Figures~\ref{fig:online_pipeline}, ~\ref{fig:offline_pipeline}, and ~\ref{fig:multirobot_pipeline} to showcase various uses of the SegMatch algorithm.
+SegMatch can be used in a variety of situations where place recognition from range data is useful. Though the usual SegMatch algorithm (Fig.~\ref{fig:pipeline}) remains applicable to all such situations, there can be differences in how SegMatch should be integrated to the general pipeline, to interact with other robot or computer processes. Examples pipelines are given in Figures~\ref{fig:online_pipeline}, ~\ref{fig:offline_pipeline}, and ~\ref{fig:multirobot_pipeline} to showcase various uses of the SegMatch algorithm.\\
 
 \begin{figure}
   \centering
-  \includegraphics[width=5.2in]{images/Online Pipeline.pdf}
+  \includegraphics[width=5.2in]{images/Online_Pipeline.pdf}
   \caption{An example of a simplified pipeline for using SegMatch online.}
   \label{fig:online_pipeline}
 \end{figure}
 
 \begin{figure}
   \centering
-  \includegraphics[width=5.2in]{images/Offline Pipeline.pdf}
+  \includegraphics[width=5.2in]{images/Offline_Pipeline.pdf}
   \caption{An example of a simplified pipeline for using SegMatch offline.}
   \label{fig:offline_pipeline}
 \end{figure}
 
 \begin{figure}
   \centering
-  \includegraphics[width=5.2in]{images/Multi-Robot Pipeline.pdf}
+  \includegraphics[width=5.2in]{images/Multi-robot_Pipeline.pdf}
   \caption{An example of a simplified pipeline for using SegMatch online when several robots are exploring the same environment.}
   \label{fig:multirobot_pipeline}
 \end{figure}
+
 
 \section{Input}
 \label{sec:input}
@@ -50,11 +53,19 @@ Usually, LiDAR sensors do not produce ready-made point clouds of the local area,
 \subsection{Sensor Data}
 \label{subsec:sensordata}
 
-Two types of sensors were used in the course of this project, rotating sensors (Velodyne) and rolling sensors (SICK). \\
+Two types of sensors were used in the course of this project, rotating sensors and rolling sensors. \\
 
-Rotating sensors have a 360° view. With each rotation, they scan points along a cone originating from the sensor, resulting in a single circular scan line. This cone angle is varied by a set amount after each full rotation, with a maximum absolute angle making it so that the sensor is unable to scan the area directly above or under it. A typical rotating sensor scan is illustrated in Fig.~\ref{fig:velodyne-scan}.\\ % TODO
+Rotating sensors have a 360° view. With each rotation, they scan points along a cone originating from the sensor, resulting in a single circular scan line. This cone angle is varied by a set amount after each full rotation, with a maximum absolute angle making it so that the sensor is unable to scan the area directly above or under it. A typical rotating sensor scan is illustrated in Fig.~\ref{fig:velodyne-scan}.\\
 
-Rolling sensors have a 180° view, scanning towards the front and sides. The scan is flat, meaning that the points are all located on the same plane relative to the sensor’s roll angle. By varying this roll angle with every subsequent scan, the sensor can produce points at many vertical angles towards its sides. A typical rolling sensor scan is illustrated in Fig.~\ref{fig:sick-scan}.\\ % TODO
+Rolling sensors have a 180° view, scanning towards the front and sides. The scan is flat, meaning that the points are all located on the same plane relative to the sensor’s roll angle. By varying this roll angle with every subsequent scan, the sensor can produce points at many vertical angles towards its sides.\\
+
+\begin{figure}
+  \centering
+  \includegraphics[width=3.2in]{images/1_velodyne_scan.png}
+  \caption{Typical output of a single 360 \degree scan created by a rotating sensor.}
+  \label{fig:velodyne-scan}
+\end{figure}
+
 
 \subsection{Data Distortion}
 \label{subsec:distortion}
@@ -65,7 +76,7 @@ Naively mapping the full scan from sensor frame to world frame with a single aff
 
 Precise knowledge of the robot’s odometry at various times during the scanning process allows to correct for distortion, by associating a different affine mapping from sensor frame to world frame to each group of points taken at a discrete rotation angle of the sensor.\\
 
-In the case of rotating sensors, Philipp Kruesi has built the velodyne-assembler package \ref{velodyne-assembler} which corrects distortion in the aforementioned manner.\\ %TODO velodyne-assembler?
+In the case of rotating sensors, Philipp Kruesi has built the velodyne-assembler package which corrects distortion in the aforementioned manner.\\ %TODO velodyne-assembler?
 
 \subsection{Sensor Artefacts}
 \label{subsec:artefacts}
@@ -105,6 +116,8 @@ By understanding this, it is easier to select the parameters which lead to optim
 
 In this section, we present the main segmentation algorithms implemented and used in SegMatch. Their output and performance is discussed.\\
 
+It should be noted that other segmentation algorithms exist and are not presented here.\\
+
 \subsection{Euclidean Clustering}
 \label{subsec:euclidean}
 %TODO
@@ -142,20 +155,20 @@ For each point, a difference of normals is calculated between the average neighb
 
 Parameters: $r_s$, $r_l$, $\Delta_n^{threshold}$
 
-\subsection{Region Growing}
-\label{subsec:region-growing}
+% \subsection{Region Growing}
+% \label{subsec:region-growing}
+% 
+% The Region Growing algorithm is notably useful for segmenting areas where curvature remains under a certain threshold.
+% %TODO
+% 
+% Parameters: $\theta$
 
-The Region Growing algorithm is notably useful for segmenting areas where curvature remains under a certain threshold.
-%TODO
-
-Parameters: $\theta$
-
-\subsection{Optimizations}
-\label{subsec:optimizations}
-%TODO
-
-D2Depth-based Segmentation\\
-Normals from original scan
+% \subsection{Optimizations}
+% \label{subsec:optimizations}
+% %TODO
+% 
+% D2Depth-based Segmentation\\
+% Normals from original scan
 
 \section{Description}
 \label{sec:description}
@@ -172,10 +185,26 @@ A good descriptor is a descriptor which approaches this behavior, where segments
 
 This section outlines the pre-existing segment description algorithms used in SegMatch. In Chapter \ref{sec:segmatchAE}, we introduce our own descriptor based on an unsupervised learning approach.\\
 
+The list of descriptors presented in this section is in no way exhaustive.\\
+
 \subsection{Eigenvalue-based Features}
 \label{subsec:eigenvalues}
 
-$\lambda_1$, $\lambda_2$, $\lambda_3$ are the eigenvalues of the covariance matrix $C \in \mathbb{R}^{3x3}$
+Eigenvalue based features are proposed in Weinmann \cite{weinmann2014semantic}.
+
+This descriptor yields 7 feature values:
+
+\begin{itemize}
+  \item{Linearity = $\frac{\lambda_1 - \lambda_2}{\lambda_1}$}
+  \item{Planarity = $\frac{\lambda_2 - \lambda_3}{\lambda_1}$}
+  \item{Scattering = $\frac{\lambda_3}{\lambda_1}$}
+  \item{Omnivariance = $\sqrt[3]{\lambda_1 \lambda_2 \lambda_1}$}
+  \item{Anisotropy = $\frac{\lambda_1 - \lambda_3}{\lambda_1}$}
+  \item{Eigenentropy = $\sum\limits_{i=1}^3 \lambda_i \ln{\lambda_i}$}
+  \item{Change of Curvature = $\frac{\lambda_3}{\lambda_1 + \lambda_2 + \lambda_3}$}
+\end{itemize}
+
+$\lambda_1$, $\lambda_2$, $\lambda_3$ are the normalized eigenvalues of the covariance matrix $C \in \mathbb{R}^{3x3}$
 $$
 C = 
 \begin{bmatrix}
@@ -189,8 +218,9 @@ $\textbf{x}$, $\textbf{y}$, $\textbf{z}$ being the coordinates of all points ins
 \subsection{Ensemble of Shapes}
 \label{subsec:ensemble-of-shapes}
 
-This descriptor calculates the statistical measure of some properties for randomly selected point pairs/triplets within the object.\\
-%TODO
+This descriptor presented in Wohlkinger \cite{wohlkinger2011ensemble} calculates the statistical measure of some properties for randomly selected point pairs/triplets within the object.\\
+
+It outputs 640 feature values, which represent 10 histograms of 64 values each. These histograms are stochastically calculated from three shape functions, based on distances, areas, and angles respectively.
 
 \section{Matching}
 \label{sec:matching}
@@ -219,9 +249,11 @@ For descriptors which are further from the ideal, better matching results can be
 \subsection{Random Forests}
 \label{subsec:RF}
 
-Random Forests are a Machine Learning algorithm which trains many decision trees simultaneously, then polls them in order to classify input.\\
+Random Forests are a Machine Learning algorithm which trains many decision trees simultaneously, then polls them in order to classify input as discussed in \cite{breiman2001random}.\\
 
-In our case, the input is a pair of feature vectors belonging to two segments, and the output a boolean describing wether or not they are a match. This output can also instead be a probability of match $p$, with $0 \leq p \leq 1$.
+In our case, the input is a pair of feature vectors belonging to two segments, and the output a boolean describing wether or not they are a match. This output can also instead be a probability of match $p$, with $0 \leq p \leq 1$.\\
+
+Though the Random Forest algorithm allows for much more complex selection of potential matches based on their description, it requires supervised training in order to create the necessary decision trees. This is an issue, as we have no simple solution for generating a large dataset of matching segments, and ensuring that we do not accidentally label a positive match as negative is a complex process.\\
 
 %TODO
 
@@ -333,24 +365,34 @@ These duplicate matches are detrimental to the Geometrical Clustering step, eith
 \section{Results}
 \label{sec:segmatch-results}
 
-\subsection{Influence of parameters}
-
-This subsection evaluates the influence of algorithm parameters on the output.\\
+% \subsection{Influence of parameters}
+% This subsection evaluates the influence of algorithm parameters on the output.\\
 %TODO
 
 \subsection{Loop closures}
 
-We were able to demonstrate loop closure capabilities with SegMatch, with minimal parameter tuning.
+We were able to demonstrate loop closure capabilities with SegMatch, with minimal parameter tuning.\\
+
+SegMatch was tested on the public KITTI datasets (drive 18, 20, 27), as well as our own. On all datasets, SegMatch was able to identify useful loop closures, and correct previous trajectory errors accordingly. Over a large amount of trials, the ratio of good to false loop closures was measured to be below 3\%.\\
+
+On the KITTI dataset, the method of segmentation used was Euclidean Clustering (Subsection \ref{subsec:euclidean}). On our own dataset (taken during a walk around ETH, and named "Clausiustrasse" after the street it was taken on), Difference of Normals segmentation was used instead, for two main reasons: 1) The scene being dominated by large objects, a segmentation yielding smaller segments was preferred. 2) Our robot NIFTI moves at human walking speed, therefore much slower than KITTI's cars. This slow movement allows for enough processing time to perform Difference of Normals calculations in real-time.\\
 %TODO
 
 \begin{figure}
   \centering
   \includegraphics[width=5.2in]{images/segmatchae.png}
-  \caption{Successful SegMatch loop closure detection on KITTI drive 20.}
+  \caption{Example of a successful SegMatch loop closure detection on KITTI drive 20. For visualization purposes, the source segments are virtually raised by 15 meters above the target.}
   \label{fig:segmatch-loop-closure}
 \end{figure}
 
-Fig.~\ref{fig:corrected}.\\
+\begin{figure}
+  \centering
+  \includegraphics[width=5.2in]{images/clausius2.png}
+  \caption{Example of a successful SegMatch loop closure detection on our own dataset, taken during a walk around Clausiustrasse. For visualization purposes, the source segments are virtually raised by 15 meters above the target.}
+  \label{fig:clausius2}
+\end{figure}
+
+Fig.~\ref{fig:corrected} shows the final result of SegMatch being applied in real time, during a single run on KITTI drive 18. The use of loop closures to correct drift in the map successfully yields a more accurate trajectory and map. In this example, drift was artificially induced into the KITTI dataset (which otherwise contains true GPS baseline).\\
 
 \begin{figure}[!tbp]
   \centering
