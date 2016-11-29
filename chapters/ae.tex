@@ -7,7 +7,7 @@ This Chapter details the work following the implementation of SegMatch. In this 
 \label{sec:ae-intro}
 %TODO
 
-Recent work is showing neural networks as a versatile and promising machine learning technique. Despite initial promise in the years following the invention of the Perceptron \cite{perceptron} in 1958, neural networks did not show useful results, or superiority to other machine learning algorithms on many problems for some time. In the recent years (2006-) however, breakthrough results in the fields of audio (see WaveNet \cite{wavenet}), visual (see ? \cite{inception?}), natural language processing (see ? \cite{?}), game-agent (see AlphaGo \cite{alphago}), to cite a few, have led to increased research effort and adoption in consumer \cite{snapchat-face-recognition} and business \cite{google-cooling} technologies.\\
+Recent work is showing neural networks as a versatile and promising machine learning technique. Despite initial promise in the years following the invention of the Perceptron \cite{perceptron} in 1958, neural networks did not show useful results, or superiority to other machine learning algorithms on many problems for some time. In the recent years (2006-) however, breakthrough results in the fields of audio (see Oord \cite{wavenet}), visual (see Szegedy \cite{inception}), natural language processing (see Goldberg \cite{nlp}) game-agent (see Silver \cite{alphago}), to cite a few, have led to increased research effort and adoption in consumer and business technologies.\\
 
 There is little doubt that neural networks can also be useful in the robotics field. With this in mind, and based on pre-existing research on classifying 3D segments using neural networks (see Subsection~\ref{subsec:voxnet}), it was decided that neural networks were an ideal test subject for improving SegMatch performance.\\
 
@@ -38,7 +38,7 @@ In the simplest case, learning is achieved through \textit{backpropagation} of t
 
 An arbitrary amount of hidden layers can theoretically be stacked behind each other. Networks consisting of many hidden layers are referred to as 'deep' neural networks, and are supposedly able to capture more complex relationships within their logical pathways than 'shallow' networks.\\
 
-As is often repeated in the context of artificial neural networks, a shallow network consisting of a single neural network, if it has infinitely many neurons, can theoretically compute any function $f(inputs) = outputs$. In practice however, deeper networks are often used when attempting to comput complex functions.\\
+As is often repeated in the context of artificial neural networks, a shallow network consisting of a single neural network, if it has infinitely many neurons, can theoretically compute any function $f(inputs) = outputs$. In practice however, deeper networks are often used when attempting to compute complex functions.\\
 
 However, deep neural networks used in such cases often have architectures and particularities which differ from the simple model presented in subsubsection \ref{subsubsec:simple-model}. This is due in part to instabilities which arise when backpropagating the error through many layers.\\ 
 
@@ -77,7 +77,7 @@ Feedforward neural networks take a fixed number of inputs. However, 3D segment d
 
 A common way to adapt the data to the input size is padding, in which the input size of the model is set to the largest possible size in the data, and a fixed value is attributed to 'missing' inputs, signaling the network that these inputs are to be ignored.\\
 
-In the case of 3D segments, a list of points is intuitively not the best representation of the underlying 3D data, as it has an intrinsical order which in practice is arbitrary (i.e., there is no reason for the first point to be first). Networks however tend to try to learn relationships between inputs depending on their positions, where in this case there is none.\\
+In the case of 3D segments, a list of points is intuitively not the best representation of the underlying 3D data, as it has an intrinsic order which in practice is arbitrary (i.e., there is no reason for the first point to be first). Networks however tend to try to learn relationships between inputs depending on their positions, where in this case there is none.\\
 
 Voxelizing the 3D segments yields occupancy grids of fixed size. In addition, the order of the values inside a voxel representation matters (the first point has coordinates (0,0,0), the second (0,0,1), etc \ldots). These properties are ideal for convolutional networks. The downside is that precise geometrical information is lost with low voxel grid resolutions.\\
 
@@ -103,7 +103,7 @@ Maturana and Scherer \cite{voxnet} use 3D convolutions in their VoxNet model, in
 
 VoxNet takes a 32x32x32 occupancy grid as input, and outputs a softmax classification of the segment.\\
 
-Its first two layers are convolutions, wth respectively 32 5x5x5 filters and 32 3x3x3 filters, a 2x2 max pooling layer, a fully connected layer of size 128, and a softmax fully connected output layer of size $K$, $K$ being the number of possible classes to draw a prediction from.\\
+Its first two layers are convolutions, with respectively 32 5x5x5 filters and 32 3x3x3 filters, a 2x2 max pooling layer, a fully connected layer of size 128, and a softmax fully connected output layer of size $K$, $K$ being the number of possible classes to draw a prediction from.\\
 
 Maturana and Scherer found that VoxNet performs at state-of-the-art accuracy.
 
@@ -146,7 +146,7 @@ The fast architecture consists of the input layer, two fully connected layers (4
 
 In both architectures, the latent space size is set to 15. To these 15 values predicted by the autoencoder for segment representations, are concatenated 3 dimensional scales, for $x$, $y$, and $z$, which are calculated during voxelization. These are added because the voxelization step scales all segments to fit inside the occupancy grid. Thus, the autoencoder is given dimensionless input in $x$, $y$, and $z$ directions. As such, unless the autoencoder guesses the common size of segments based on other indicators (there is reason to believe that it does not: such information would not improve its reconstruction accuracy, nor do we give it any data during training that would allow such properties to be learnt), size information of the segment would be lost. This gives the SegMatch autoencoder descriptor a total of 18 features.\\
 
-The value of 15 for the latent space dimension was selected by a process of trial and error (See Annex Section \ref{sec:latent_space_size}).\\
+The value of 15 for the latent space dimension was selected by a process of trial and error (See Appendix, Section \ref{sec:latent_space_size}).\\
 
 \subsection{Training}
 \label{subsec:ae-training}
@@ -180,7 +180,7 @@ Our measurements show greater accuracy for the accurate model architecture, as e
 \begin{figure}
   \centering
   \includegraphics[width=3.2in]{images/trainingcost.png}
-  \caption{Comparison of valdidation cost for the fast and accurate architectures, when the same training regime is applied to both, shows that the accurate architecture generalizes better and with greater reconstruction accuracy.}
+  \caption{Comparison of validation cost for the fast and accurate architectures, when the same training regime is applied to both, shows that the accurate architecture generalizes better and with greater reconstruction accuracy.}
   \label{fig:trainingcost}
 \end{figure}
 
@@ -237,7 +237,7 @@ Another analysis of the latent space was made, looking at the average absolute v
 \begin{figure}
   \centering
   \includegraphics[width=5.2in]{images/t-sne_eig.png}
-\caption{T-SNE projection of the eigenvalue descriptions for the same 1187 segments as in Fig.~\ref{fig:t-sne}}
+\caption{T-SNE projection of the eigenvalue descriptions for the same 1187 segments as in Fig.~\ref{fig:tsne}}
   \label{fig:tsne_eig}
 \end{figure}
 

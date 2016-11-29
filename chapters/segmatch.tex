@@ -88,16 +88,16 @@ After being corrected for distortion, sensor data contains registration patterns
 
 As single sensor scans contain registration patterns (Subsection ~\ref{subsec:artefacts}), subsequent scans should be accumulated while the robot and sensor move, in order to collect data over the whole environment. Should the scans be assembled correctly, i.e, according to the correct transform w.r.t. each other, registration patterns get progressively reduced, as the accumulated data densifies.\\
 
-To do so, knowledge of the robot's position and orientation at each sensor aquisition time is required. When the robot odometry is not sufficiently trustworthy, the Laser SLAM algorithm allows using the sensor data to increase the odometry knowledge and improve the quality of the accumulated data.\\
+To do so, knowledge of the robot's position and orientation at each sensor acquisition time is required. When the robot odometry is not sufficiently trustworthy, the Laser SLAM algorithm allows using the sensor data to increase the odometry knowledge and improve the quality of the accumulated data.\\
 
 \section{Segmentation}
 \label{sec:segmentation}
 
 The process of segmentation consists in clustering points which share a common property. In our case, the goal is for that property to be appartenance to a particular object, in the real-world space equivalent to point-cloud space.\\
 
-The input of this step is a 3D point cloud. If both source and target clouds are to be segmented, this step is imply applied once to the source and once to the target, in exactly the same way.
+The input of this step is a 3D point cloud. If both source and target clouds are to be segmented, this step is simply applied once to the source and once to the target, in exactly the same way.
 
-A perfect segmentation is however not explicitely defined. Should the point-cloud of a building be segmented into more basic components, such as walls, windows, and doors, or as single large cluster? Should a tree be clustered as a trunk with clusters of leaves above it or as a single cluster (illustrated in Fig.~\ref{fig:hierarchical})?\\
+A perfect segmentation is however not explicitly defined. Should the point-cloud of a building be segmented into more basic components, such as walls, windows, and doors, or as single large cluster? Should a tree be clustered as a trunk with clusters of leaves above it or as a single cluster (illustrated in Fig.~\ref{fig:hierarchical})?\\
 
 Moosman \cite{moosmann2011unsupervised} mentions hierarchically segmenting the scene, i.e., not only clustering point clouds into segments, but also subsegments and subsubsegments. As a result, a single point can be assigned to a segment, \textit{and} one of its subsegments, and so on. This segment hierarchy is established in order to capture those patterns that exist in real-world objects, which can be composed of smaller, simpler objects.\\
 
@@ -146,7 +146,7 @@ In order to do this, a difference of normals operator is defined, describing the
   \centering
   \includegraphics[width=3.2in]{images/DoN.png}
   \caption{The DoN operator according to Ioannou \cite{ioannou2012difference}}
-  \label{fig:hierarchical}
+  \label{fig:DoN}
 \end{figure}
 
 The average neighboring normals are first calculated at each point for neighbours which fall in a large scale radius $r_l$, then again for neighbours which fall in a small scale radius $r_s$. This process is often computationally heavy, increasingly so as the large scale increases (if nearest neighbours are not sampled).\\
@@ -183,7 +183,7 @@ In other words, ideal descriptors lead to strong clustering in the n-dimensional
 
 A good descriptor is a descriptor which approaches this behavior, where segments which are views of the same object are often clustered close to each other. Weaker larger-scale clustering in accordance with object classes (objects that are similar yet not identical) can reasonably be expected.\\
 
-This section outlines the pre-existing segment description algorithms used in SegMatch. In Chapter \ref{sec:segmatchAE}, we introduce our own descriptor based on an unsupervised learning approach.\\
+This section outlines the pre-existing segment description algorithms used in SegMatch. In Chapter \ref{chap:ae}, we introduce our own descriptor based on an unsupervised learning approach.\\
 
 The list of descriptors presented in this section is in no way exhaustive.\\
 
@@ -249,9 +249,9 @@ For descriptors which are further from the ideal, better matching results can be
 \subsection{Random Forests}
 \label{subsec:RF}
 
-Random Forests are a Machine Learning algorithm which trains many decision trees simultaneously, then polls them in order to classify input as discussed in \cite{breiman2001random}.\\
+Random Forests are a machine learning algorithm which trains many decision trees simultaneously, then polls them in order to classify input as discussed in \cite{breiman2001random}.\\
 
-In our case, the input is a pair of feature vectors belonging to two segments, and the output a boolean describing wether or not they are a match. This output can also instead be a probability of match $p$, with $0 \leq p \leq 1$.\\
+In our case, the input is a pair of feature vectors belonging to two segments, and the output a boolean describing whether or not they are a match. This output can also instead be a probability of match $p$, with $0 \leq p \leq 1$.\\
 
 Though the Random Forest algorithm allows for much more complex selection of potential matches based on their description, it requires supervised training in order to create the necessary decision trees. This is an issue, as we have no simple solution for generating a large dataset of matching segments, and ensuring that we do not accidentally label a positive match as negative is a complex process.\\
 
@@ -261,11 +261,11 @@ Though the Random Forest algorithm allows for much more complex selection of pot
 \label{sec:filtering}
 
 %TODO
-An efficient method to extract patterns of matches from a list of potential matches is the Geometric Consistency algorithm \cite{geometric-consistency}.\\
+An efficient method to extract patterns of matches from a list of potential matches is the \textit{Geometric Consistency} algorithm, based on random sample consensus (as presented in \cite{fischler1981random}).\\
 
 In this algorithm, matches are clustered together if they can form an Euclidean transformation, within a spatial tolerance $r$. As the Euclidean transformation has 6 degrees of freedom, any clusters with less than 3 matches is filtered out.\\
 
-The clusters which remain, those consistuting of 3 or more matches, are loop closure candidates. The algorithm also returns the transformations formed by each of these clusters.\\
+The clusters which remain, those consisting of 3 or more matches, are loop closure candidates. The algorithm also returns the transformations formed by each of these clusters.\\
 
 \section{Applying SegMatch - Online Example}
 \label{sec:online}
@@ -315,7 +315,7 @@ Thus it can be advantageous to prioritize closer objects, which allows one to as
 
 The resulting strategy is excessively simple: accumulate all points, until target density is reached in nearby objects, then segment all accumulated points. After segmentation, discard those points and start over.\\
 
-A further idealization is to relate densification to movement. This is particularly true of rotating LIDAR systems such as the velodyne, with wich the sensor can only cover new areas if the robot moves.\\
+A further idealization is to relate densification to movement. This is particularly true of rotating LIDAR systems such as the velodyne, with which the sensor can only cover new areas if the robot moves.\\
 
 According to this idealization, when the robot has moved a certain amount $\Delta x$ it densifies nearby objects by the amount $\Delta D$.
 
@@ -359,7 +359,7 @@ For example, say that the boundary filter is cylindrical of radius $R$. We only 
 
 In our experiments, results indicate that it is necessary to prevent duplicate segments from being stored, as they later create duplicate matches.\\ 
 
-These duplicate matches are detrimental to the Geometrical Clustering step, either artificially increasing the amount of matches in a cluster, or even creating clusters consisting only of identical matches ( with an exagerated transformation, since there is not enough true degree of freedom information in those duplicate matches ).
+These duplicate matches are detrimental to the Geometrical Clustering step, either artificially increasing the amount of matches in a cluster, or even creating clusters consisting only of identical matches ( with an exaggerated transformation, since there is not enough true degree of freedom information in those duplicate matches ).
 
 
 \section{Results}
@@ -375,7 +375,9 @@ We were able to demonstrate loop closure capabilities with SegMatch, with minima
 
 SegMatch was tested on the public KITTI datasets (drive 18, 20, 27), as well as our own. On all datasets, SegMatch was able to identify useful loop closures, and correct previous trajectory errors accordingly. Over a large amount of trials, the ratio of good to false loop closures was measured to be below 3\%.\\
 
-On the KITTI dataset, the method of segmentation used was Euclidean Clustering (Subsection \ref{subsec:euclidean}). On our own dataset (taken during a walk around ETH, and named "Clausiustrasse" after the street it was taken on), Difference of Normals segmentation was used instead, for two main reasons: 1) The scene being dominated by large objects, a segmentation yielding smaller segments was preferred. 2) Our robot NIFTI moves at human walking speed, therefore much slower than KITTI's cars. This slow movement allows for enough processing time to perform Difference of Normals calculations in real-time.\\
+Dubé \cite{segmatch} presents a comparison between SegMatch and Keypoint-based methods, as well as statistics for SegMatch offline loop-closure finding capabilities. Both show promising results for the SegMatch algorithm.\\
+
+On the KITTI dataset, the method of segmentation used was Euclidean Clustering (Subsection \ref{subsec:euclidean}). On our own dataset (taken during a walk around ETH, and named "Clausiusstrasse" after the street it was taken on), Difference of Normals segmentation was used instead, for two main reasons: 1) The scene being dominated by large objects, a segmentation yielding smaller segments was preferred. 2) Our robot NIFTI moves at human walking speed, therefore much slower than KITTI's cars. This slow movement allows for enough processing time to perform Difference of Normals calculations in real-time.\\
 %TODO
 
 \begin{figure}
@@ -388,7 +390,7 @@ On the KITTI dataset, the method of segmentation used was Euclidean Clustering (
 \begin{figure}
   \centering
   \includegraphics[width=5.2in]{images/clausius2.png}
-  \caption{Example of a successful SegMatch loop closure detection on our own dataset, taken during a walk around Clausiustrasse. For visualization purposes, the source segments are virtually raised by 15 meters above the target.}
+  \caption{Example of a successful SegMatch loop closure detection on our own dataset, taken during a walk around Clausiusstrasse. For visualization purposes, the source segments are virtually raised by 15 meters above the target.}
   \label{fig:clausius2}
 \end{figure}
 

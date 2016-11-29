@@ -1,6 +1,7 @@
 \chapter{Annex}\label{sec:irgendwas}
 
 \section{Latent Space Dimension}
+\label{sec:latent_space_size}
 
 In the process of selecting the autoencoder architecture, a comparison was made between sizes in the latent space. The goal was to encode the segment descriptions with as small a dimensionality as possible, in order to show that the autoencoder could perform better than other descriptors even for similar description sizes. Another advantage of keeping descriptions small is that they would require less storage space when running SegMatch on long datasets.\\
 
@@ -11,6 +12,6 @@ As an extremum example, a model with a 2-dimensional latent space was trained si
 \begin{figure}
   \centering
   \includegraphics[width=5.2in]{images/2dlatentspace.png}
-  \caption{Segment descriptions given by a 2-dimension latent space autoencoder model}
+  \caption{Segment descriptions given by a 2-dimensional latent space autoencoder model}
   \label{fig:2d_latent_space}
 \end{figure}

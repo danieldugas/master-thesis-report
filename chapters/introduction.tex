@@ -1,7 +1,7 @@
 \chapter{Introduction}
 \label{sec:introduction}
 
-This report is structured as follows: Chapter \ref{chap:segmatch} describes the implementations details of the segment-based loop closure algorithm which was developped during this project, and its usefulness and performance. The presented loop closure algorithm is from this point on referred to as SegMatch. SegMatch is also described and evaluated in Dubé \cite{segmatch}.\\
+This report is structured as follows: Chapter \ref{chap:segmatch} describes the implementations details of the segment-based loop closure algorithm which was developed during this project, and its usefulness and performance. The presented loop closure algorithm is from this point on referred to as SegMatch. SegMatch is also described and evaluated in Dubé \cite{segmatch}.\\
 
 Chapter \ref{chap:ae} explores the development of a learning-based enhancement to SegMatch, allowing a module of the algorithm to learn useful segment descriptions in an unsupervised fashion. The enhancement is implemented and tested, and the results are discussed. The enhanced SegMatch algorithm, with autoencoder-based description is from here on out referred to as SegMatchAE.\\
 
@@ -19,56 +19,60 @@ When mapping the environment with a range-based sensor, the same algorithms as f
 \section{State-of-the-Art}
 \label{sec:SOTA}
 
-The works presented in \cite{bosse2013place, zhuang20133, steder2010robust, steder2011place, Gawel2016} propose to extract local features from keypoints and perform matches on the basis of these features.
+In this paragraph, we present approaches for detecting similarities in clouds. From top to bottom, the following approaches are ordered based on the size of the elements (extracted from the clouds) which they attempt to match (going from keypoints, arguably the smallest possible elements to match between, to matching the whole point cloud at once - for example with ICP or through description):
 
-\citet{bosse2013place} extract keypoints directly from the point clouds and describe them with a 3D \textit{Gestalt} descriptor. Keypoints then vote for their nearest neighbours in a \textit{vote matrix} which is finally thresholded for recognizing places. Similar approach has been used in \cite{Gawel2016}.
+\begin{itemize}
+  \item{Keypoint matching: Bosse \cite{bosse2013place}, Gawel \cite{Gawel2016}, Zhang \cite{zhang2014loam}}
+\item{Transform local scans into range images, followed by keypoint matching: Zhuang \cite{zhuang20133},  Steder \cite{steder2010robust, steder2011place}}
+  \item{Real-time keypoint matching: Zhang \citet{zhang2014loam}}
+  \item{Cell-based matching: Magnusson \cite{magnusson2009automatic}}
+  \item{Planes Matching: Fernandez \cite{fernandez2013fast, fernandez2016scene}}
+  \item{Segment Matching (RGB-D): Finman \cite{finman2015icraws}}
+  \item{SLAM + Kalman Filter + Segments: Nieto \cite{nieto2006scan}}
+  \item{Segment Matching for Realigning Clouds: Douillard \cite{douillard2012scan, douillard2014pipeline}}
+  \item{Local point-cloud matching: Rohling, Ganstrom, Magnusson \cite{rohling2015fast, granstrom2011learning,magnusson2009automatic}}
+\end{itemize}
 
-
-Descriptors:\\ 
-
-Fast Point Feature Histograms ~\cite{rusu2009fast}  \\
-
-NBLD ~\cite{cieslewski2016point}\\
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-Zhuang \citet{zhuang20133} transform the local scans into bearing-angle images and extract Speeded Up Robust Features (SURFs) from these images. A strategy based on 3D spatial information is employed to order the scenes before matching the descriptors. \\
-
-A similar technique by \citet{steder2010robust} first transforms the local scans into a range image.  Local features are extracted and compared to the ones stored in a database, employing the Euclidean distance for matching keypoints.
-
-This work is extended in \cite{steder2011place} by using Normal-Aligned Radial Features (NARF) descriptors and a bag of words approach for matching.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-
-Zhang \citet{zhang2014loam} shows real-time mapping on range data. Odometry and mapping are performed in two phases: a high frequency pass extracts keypoints and matches them to estimate odometry between two scans, while a lower frequency pass assembles the scans into a map by using statistical analysis and nonlinear optimization. Offline loop-closure detection is mentioned.
-
-\citet{bosse2013place} use a keypoint voting-based approach for finding places. The space is first segmented into two semi-overlapping voxel grids of 0.4m resolution. Keypoints are randomly selected and \textit{Gestallt} features computed. Nearest neighbour search is computed and votes are aggregated in the \textit{vote matrix} which is tresholded for recognizing places. A RANSAC based approach is used for transforming the corresponding keypoints into 6DoF transformations. Statistical modeling is applied for determining the vote threshold and the size of the neighbourhood.
-
-\citet{steder2011place} first extracts \textit{normal-aligned radial featurest} (NARFs) which are parameterized by feature size, maximum number per image and support size. A dictionary is learned over the scans database and clustered in 200 words. For new images, NARF features are associated to their closest within dictionary and histograms of words are compared to reorder the database scans in the most likely to match order. Transformations computation and similarity evaluation is then performed going through the scans pile with a threshold on the maximum matching time.
-
-Using global descriptors of the local point cloud for loop-closures is also proposed \cite{rohling2015fast,granstrom2011learning,magnusson2009automatic}.
-
-\citet{rohling2015fast} propose to describe each local point cloud with a 1D histogram of point heights, assuming that the sensor keeps a constant height above the ground.  The height of every point above the ground is used for computing this description and it is assumed that the sensor keeps a constant height above the ground.  The histograms are then compared using the \textit{Wasserstein} metric for recognizing places.
-
-\citet{granstrom2011learning} describe point clouds with rotation invariant features such as volume, nominal range, and range histogram.  Distances are computed for scalar features and cross-correlation for histogram features, and an AdaBoost classifier is trained to match places.  Finally, ICP is used for computing the relative pose between point clouds.
-
-In another approach, \citet{magnusson2009automatic} split the cloud into overlapping grids and compute shape properties (spherical, linear, and several type of planar) of each cell and combine them into a matrix of surface shape histograms.  Matrices are weighted so that places with many points are not favoured.  Similar to other works, these descriptors are compared for finding loop-closures.
+In a sense, segments are an inbetween solution, in that they are larger than keypoints and (can also through their complexity possess more idiosyncrasies), while being smaller than full point-clouds, or range images based on point-clouds.\\
 
 
-Other works have also proposed to use 3D segments or objects for the place recognition task.
+Several descriptors are used throughout the literature, of which the following is a non-exhaustive list.\\
 
-\citet{fernandez2013fast}, for example, propose to perform place recognition by detecting planes in 3D environments.  Planes are identified through region growing and described by their centroid, area, elongation, and normal and principal vectors.  These are then accumulated in a graph where sub-graphs are composed of the planes 1-connected with a reference plane.  An interpretation tree is employed to search for the best match between two sub-graphs, and consistency tests are made for finding a rigid transformation between two matching sub-graphs.  The planes are accumulated in a graph and an interpretation tree is used to match sub-graphs.  A final geometric consistency test is conducted over the planes in the matched sub-graphs.
+Among local descriptors, are 
+Fast point feature histogram used in Rusu \cite{rusu2009fast}, 
+the Gestalt descriptor presented in Bosse \cite{bosse2013place} and Gawel \cite{Gawel2016}
+Signature of Histograms of Orientations presented in Salti \cite{salti2014shot},
+Neighbour Binary Landmark Density used by Cieslewski \cite{cieslewski2016point} and Gawel \cite{Gawel2016},
+Speeded Up Robust Features used by Zhuang \cite{zhuang20133}, and finally 
+Normal-Aligned Radial Features presented in Steder \cite{steder2011place}.\\
 
-The work is extended in \cite{fernandez2016scene} to use the covariance of the plane parameters instead of the number of points in planes for matching.  This strategy is only applied to small, indoor environments and assumes a plane model for segments which is no longer valid in unstructured environment.
+A few global descriptors used in the above works are,
+Point heights (Rohling \cite{rohling2015fast}),
+Volume, Nominal range, Range Histogram (Granstrom \cite{granstrom2011learning}),
+Shape Properties (Magnusson \cite{magnusson2009automatic}).\\
 
-\citet{finman2015icraws} Present loop-closure detection by object-matching in indoor environments using RGB-D cameras.
+Segment descriptors include,
+Number of points in a segment (Fernandez \cite{fernandez2013fast}),
+Covariance of plane parameters (Fernandez \cite{fernandez2016scene}),
+Symmetric Shape Distance (Douillard \cite{douillard2012scan}),
+Eigenvalue-based features, proposed in Weinmann \cite{weinmann2014semantic}, which we use in this project,
+and finally,
+Ensemble of Shapes, presented in Wohlkinger \cite{wohlkinger2011ensemble}, also used in this project.\\
 
 
+We also propose the following non-exhaustive list of methods for matching described elements.\\
 
-SLAM with segments
 
-A strategy for aligning Velodyne scans based on segments is proposed in \cite{douillard2012scan} where the Symmetric Shape Distance is used to compare and match segments as defined in \cite{douillard2014pipeline}.
+Bosse \cite{bosse2013place} and Gawel \cite{Gawel2016} both employ a vote matrix for matching keypoints,
+Statistical Analysis is combined with Nonlinear Optimization by Zhang \cite{zhang2014loam} for matching keypoints,
+Euclidean distance is used as a method of matching keypoints in range images by Steder \cite{steder2010robust},
+and in a follow-up work is replaced by a Bag of Words approach \cite{steder2011place}.
+The Wasserstein metric is used for matching histogram descriptions of whole local point-clouds, in Rohling \cite{rohling2015fast}.
+Granstrom \cite{granstrom2011learning} uses both AdaBoost and ICP, on whole local point-clouds.
+Random Forests and kNN (Euclidean distance) are used in this project.\\
 
-Analogously, \cite{nieto2006scan} proposed an Extended Kalman Filter solution which uses segments as landmarks, rather than point features.
+All works cited above present interesting techniques and many are sources of inspiration. However, no complete method for finding loop-closures is presented and evaluated in the literature to the best of our knowledge. The closest work in terms of similarity between methods is probably Douillard \cite{douillard2012scan}, which also proposes matching between segments. This paper thus follows the aforementioned work, and attempts to use similar methods to develop a real-time, fully functional loop-closing algorithm based on segment matching.\\
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % \section{Motivations for SegMatch}
