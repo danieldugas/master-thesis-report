@@ -1,28 +1,30 @@
 \chapter{Introduction}
 \label{sec:introduction}
 
-This report is structured as follows: Chapter \ref{chap:segmatch} describes the implementations details of the segment-based loop closure algorithm which was developed during this project, and its usefulness and performance. The presented loop closure algorithm is from this point on referred to as SegMatch. SegMatch is also described and evaluated in Dubé \cite{segmatch}.\\
+This report is structured as follows: Chapter \ref{chap:segmatch} describes the implementations details of the segment-based loop closure algorithm which was developed during this project, and illustrates its usefulness and performance. The presented loop closure algorithm is from this point on referred to as SegMatch. This thesis work also led to a paper (Dubé, Dugas et al. \cite{segmatch}).\\
 
-Chapter \ref{chap:ae} explores the development of a learning-based enhancement to SegMatch, allowing a module of the algorithm to learn useful segment descriptions in an unsupervised fashion. The enhancement is implemented and tested, and the results are discussed. The enhanced SegMatch algorithm, with autoencoder-based description is from here on out referred to as SegMatchAE.\\
+Chapter \ref{chap:ae} explores the development of a learning-based enhancement to SegMatch, allowing the algorithm to learn useful segment descriptions in an unsupervised fashion. The enhancement is implemented and tested, and the results are discussed. The enhanced SegMatch algorithm, with autoencoder-based description is from here on out referred to as SegMatchAE.\\
 
-\section{Motivation for Range-Based SLAM Loop Closures}
+\section{Motivation for Range-Based SLAM Loop Closures in 3D Mapping}
 \label{sec:motivation}
 
-When mapping the environment, in the absence of global positioning information, or other mechanisms to prevent errors from accumulating, drift will inevitably occur. Loop closures are such a mechanism of error correction, where recognition of previously visited environment allows knowledge of one's relative position to be updated.\\ 
+Approaches for 3D mapping of the environment are currently being developed, evolving from previous 2D methods, and leading to new challenges. Despite the increased complexity of 3D maps w.r.t. 2D, their superior description of the environment is becoming a necessity for several current projects in robotics and autonomous systems, for example allowing finer-grained obstacle detection, path planning, and 3D inspection.\\
 
-This project examined specifically the implementation of such a method in the case where mapping is performed on data collected by a range-based sensor.\\
+During mapping, in the absence of global positioning information, or other mechanisms to prevent errors from accumulating, drift will inevitably occur. Loop closures are such a mechanism of error correction, where recognition of previously visited environment allows knowledge of one's relative position to be updated.\\ 
 
-Range-based sensors allow for consistent depth-measurement, and can do so in environments where vision-based sensors become untrustworthy due to illumination or weather. Often, vision based sensors requires relatively complex algorithms to estimate depth. Range sensors can thus be necessary in scenarios where robust depth information is important.\\
+This project examined specifically the implementation of such a method in the case where mapping is performed on data collected by a 3D range-based sensor.\\
 
-When mapping the environment with a range-based sensor, the same algorithms as for vision-based mapping can not be used with similar success. A cause is the difference in the data produced by both sensors. As a result, even though algorithms for vision-based loop closures have been demonstrated, to our knowledge, no mature range-based equivalent exists.\\
+Range-based sensors allow for consistent depth-measurement, and can do so in environments where vision-based sensors become untrustworthy due to illumination variations or weather. Vision based sensors often require relatively complex algorithms to estimate depth. Range sensors can thus be necessary in scenarios where robust depth information is important.\\
+
+When mapping the environment with a range-based sensor in 3D, the same algorithms as for vision-based mapping can not be used with similar success. A cause is the difference in the data produced by both sensors. As a result, even though algorithms for vision-based loop closures have been demonstrated, to our knowledge, no mature range-based equivalent exists.\\
 
 \section{State-of-the-Art}
 \label{sec:SOTA}
 
-In this paragraph, we present approaches for detecting similarities in clouds. From top to bottom, the following approaches are ordered based on the size of the elements (extracted from the clouds) which they attempt to match (going from keypoints, arguably the smallest possible elements to match between, to matching the whole point cloud at once - for example with ICP or through description):
+In this section, we present approaches for detecting similarities in clouds. From top to bottom, the following approaches are ordered based on the size of the elements (extracted from the clouds) which they attempt to match (going from keypoints - i.e. points of interest, arguably the smallest possible elements to match between, to matching the whole point cloud at once - for example with ICP or through description):
 
 \begin{itemize}
-  \item{Keypoint matching: Bosse \cite{bosse2013place}, Gawel \cite{Gawel2016}, Zhang \cite{zhang2014loam}}
+  \item{Keypoint matching: Bosse \cite{bosse2013place}, Gawel \cite{Gawel2016}, Zhang \cite{zhang2014loam}, Zeng \cite{zeng20163dmatch}}
 \item{Transform local scans into range images, followed by keypoint matching: Zhuang \cite{zhuang20133},  Steder \cite{steder2010robust, steder2011place}}
   \item{Real-time keypoint matching: Zhang \citet{zhang2014loam}}
   \item{Cell-based matching: Magnusson \cite{magnusson2009automatic}}
@@ -36,9 +38,9 @@ In this paragraph, we present approaches for detecting similarities in clouds. F
 In a sense, segments are an inbetween solution, in that they are larger than keypoints and (can also through their complexity possess more idiosyncrasies), while being smaller than full point-clouds, or range images based on point-clouds.\\
 
 
-Several descriptors are used throughout the literature, of which the following is a non-exhaustive list.\\
+Several descriptors are used throughout the literature, of which the following is a non-exhaustive list.
 
-Among local descriptors, are 
+Among local descriptors are 
 Fast point feature histogram used in Rusu \cite{rusu2009fast}, 
 the Gestalt descriptor presented in Bosse \cite{bosse2013place} and Gawel \cite{Gawel2016}
 Signature of Histograms of Orientations presented in Salti \cite{salti2014shot},
@@ -60,7 +62,7 @@ and finally,
 Ensemble of Shapes, presented in Wohlkinger \cite{wohlkinger2011ensemble}, also used in this project.\\
 
 
-We also propose the following non-exhaustive list of methods for matching described elements.\\
+We also identify several methods for matching described elements, as follows:\\
 
 
 Bosse \cite{bosse2013place} and Gawel \cite{Gawel2016} both employ a vote matrix for matching keypoints,
@@ -71,7 +73,9 @@ The Wasserstein metric is used for matching histogram descriptions of whole loca
 Granstrom \cite{granstrom2011learning} uses both AdaBoost and ICP, on whole local point-clouds.
 Random Forests and kNN (Euclidean distance) are used in this project.\\
 
-All works cited above present interesting techniques and many are sources of inspiration. However, no complete method for finding loop-closures is presented and evaluated in the literature to the best of our knowledge. The closest work in terms of similarity between methods is probably Douillard \cite{douillard2012scan}, which also proposes matching between segments. This paper thus follows the aforementioned work, and attempts to use similar methods to develop a real-time, fully functional loop-closing algorithm based on segment matching.\\
+All works cited above present interesting techniques and many are sources of inspiration. However, no complete real-time method for finding loop-closures is presented and evaluated in the literature to the best of our knowledge. The closest work in terms of similarity between methods is probably Douillard \cite{douillard2012scan}, which also proposes matching between segments. This paper thus follows the aforementioned work, and attempts to use similar methods to develop a real-time, fully functional loop-closing algorithm based on segment matching.\\
+
+In the context of performing place recognition on images, \citet{lowryvisual} state that using descriptors at the level of segments or objects could provide the benefits of both local and global features approaches. Object or segment maps also offer several advantages over their metric and topological counterparts. Among others, these maps better represent situations where static objects can become dynamic, and are more closely related to the way humans perceive the environment \cite{thrun2002robotic}.\\
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
