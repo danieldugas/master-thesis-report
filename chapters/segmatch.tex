@@ -10,6 +10,11 @@ The SegMatch algorithm is constituted of 5 main steps, data input, segmentation,
 
 First, segments are extracted from a 3D point cloud, and described. They are then matched to segments from already visited places, followed by a geometric-verification step to propose loop-closures candidates.\\
 
+Segmatch takes as input two point clouds, the source and target, between which it attempts to find segment matches.  
+It sometimes happen that the target input is already segmented and described (see Section \ref{sec:online}), in which case the Segmentation and Description steps are only applied to the source cloud.  
+In any case, the Segmentation and Description steps are performed identically whether their input is the source or target cloud.\\
+
+
 \begin{figure}
   \centering
   \includegraphics[width=5.2in]{images/pipeline.pdf}
@@ -41,15 +46,11 @@ SegMatch can be used in a variety of situations where place recognition from ran
 \end{figure}
 
 
-\section{Input Data Processing}
+\section{Input Data Pre-Processing}
 \label{sec:input}
 
-The first step of SegMatch is to acquire data on which the algorithm is performed. Segmatch takes as input two point clouds, the source and target, between which it attempts to find segment matches.\\
+The first step of SegMatch is to acquire data on which the algorithm is performed. Usually, LiDAR sensors do not produce ready-made point clouds of the local area. In this case, this section illustrates ways in which raw sensor data can be transformed into a local map, which then becomes the input to the following step (segmentation). This pre-processing step is often run continuously in order to update the local map every time new sensor data is received. Unless the local map is deemed ready to be matched, only this pre-processing step is executed.\\
 
-It sometimes happen that the target input is already segmented and described (see Section \ref{sec:online}), in which case the Segmentation and Description steps are only applied to the source cloud.  
-In any case, the Segmentation and Description steps are performed identically whether their input is the source or target cloud.\\
-
-Usually, LiDAR sensors do not produce ready-made point clouds of the local area. In this case, refer to the next subsections which illustrate ways in which raw sensor data can be transformed into SegMatch input.
 
 \subsection{Sensor Data}
 \label{subsec:sensordata}
@@ -104,7 +105,7 @@ As single sensor scans contain registration patterns (Subsection ~\ref{subsec:ar
 
 To do so, knowledge of the robot's position and orientation at each sensor acquisition time is required. When the robot odometry is not sufficiently trustworthy, the Laser SLAM algorithm allows using the sensor data to increase the odometry knowledge and improve the quality of the accumulated data.\\
 
-This algorithm corrects the odometry by registering the new scans with the map using Iterative Closest Point (ICP). The laser and odometry measurements are finally combined using a pose-graph relaxation approach. The output is a 3D point coud which is becomes the input to the next step (i.e., segmentation).
+This algorithm corrects the odometry by registering the new scans with the map using Iterative Closest Point (ICP). The laser and odometry measurements are finally combined using a pose-graph relaxation approach. The output is a 3D point coud which is becomes the input to the next step.
 
 \section{Segmentation}
 \label{sec:segmentation}
@@ -179,21 +180,6 @@ Parameters for this algorithm are $r_s$, $r_l$, $\Delta_n^{threshold}$. An examp
   \caption{Example of segments extracted with the DoN segmentation algorithm. As visible in the figure, this algorithm allows the extraction of many distinctive component segments from single large objects, such as window frames, arches, and small facades.}
   \label{fig:don-segments}
 \end{figure}
-
-% \subsection{Region Growing}
-% \label{subsec:region-growing}
-% 
-% The Region Growing algorithm is notably useful for segmenting areas where curvature remains under a certain threshold.
-% %TODO
-% 
-% Parameters: $\theta$
-
-% \subsection{Optimizations}
-% \label{subsec:optimizations}
-% %TODO
-% 
-% D2Depth-based Segmentation\\
-% Normals from original scan
 
 \section{Description}
 \label{sec:description}
@@ -292,7 +278,7 @@ Though the Random Forest algorithm allows for much more complex selection of pot
 \section{Geometric Consistency}
 \label{sec:filtering}
 
-An efficient method to extract patterns of matches from a list of potential matches is the \textit{Geometric Consistency} algorithm, based on random sample consensus (RANSAC, as presented in \cite{fischler1981random}).\\
+An efficient method to extract patterns of matches from a list of potential matches is the \textit{Geometric Consistency} algorithm, based on random sample consensus (RANSAC, as presented in \citet{fischler1981random}).\\
 
 In this algorithm, matches are clustered together if they can form an Euclidean transformation, within a spatial tolerance $r$. As the Euclidean transformation has 6 degrees of freedom, any clusters with less than 3 matches is filtered out.\\
 
@@ -312,85 +298,50 @@ The present section illustrates an example of how we applied SegMatch, in the ca
 
 In the online scenario, the goal is to use SegMatch as-we-go in order to attempt to find matches between the most recent section of the environment, and the recorded past environment.\\
 
-As such, the overall process is to:   
+Our pipeline for this scenario is illustrated in Fig.~\ref{fig:online_pipeline}. It is explained in detail as follows:
 
 \begin{enumerate}
-\item Decide on the next instant or location at which to run SegMatch, and wait until it is reached.
-\item Run SegMatch between the current local map and recorded past.
-\item Add resulting segments to the recorded past.
+  \item Odometry and LiDAR sensor data is continually fed to the pre-processing step, which uses both the odometry and LiDAR scans to accumulate a map (as explained in Subsection \ref{subsec:SLAM}). No other steps are performed until the map is deemed ready to be matched. This continually updated map is the source map.
+  \item When the robot has moved 20 meters away from the previous SegMatch position (experimental and theoretical reasons behind this are discussed in \ref{subsec:segmentation-frequency}), SegMatch is applied between this source map and the target map (initially empty).
+\item At the end of the SegMatch iteration, the descriptions of segments extracted from the source map are added to the target map. The source map is cleared.
 \end{enumerate}
-
-\subsection{Segmentation Frequency}
-\label{subsec:segmentation-frequency}
-
-The process of segmenting point clouds is one of the more computationally heavy parts of the pipeline. This motivates the development of a well-designed segmentation strategy - that is, a process driving the decision such as which areas of the observed cloud to store, send for segmentation, and when.\\
-
-Regarding time: it is intuited that regions of space should be passed through the segmenter when they are most accurate and dense. This presents a trade-off problem. The longer one waits before segmenting, the worse positioning confidence is, and the larger the uncertainty in the points' fixed frame position (this leads to 'fuzzy' segments).\\
-
-Not waiting long enough, on the other hand, leads to sparse segments, which might be missing important geometrical information, or introduce artefacts - such as scan-line patterns.
-
-One way of handling this trade-off is to set a target `sufficient density', where it is estimated that increasing density leads to diminishing information gain.\\
-
-From that point on, the costs of increasing density - i.e. loss of accuracy - outweigh the benefits, and segmentation should be undertaken.\\
-
-During the accumulative process of capturing a point cloud map, the sensor might cover regions which will reach this sufficient density at different times.
-
-Within this paradigm, it would be optimal to segment different areas at different times even though they were captured simultaneously.\\
-
-
-This leads to quite complicated algorithms, and increases the amount of parameters which need to be tuned.\\
-
-However, though far away objects densify more slowly, they accumulate positional uncertainty faster. They are also less useful for positioning and place recognition, due to parallax effects.\\
-
-Thus it can be advantageous to prioritize closer objects, which allows one to assume a single rate of density increase for the whole area being captured - fixed to the close objects densification rate.\\
-
-The resulting strategy is excessively simple: accumulate all points, until target density is reached in nearby objects, then segment all accumulated points. After segmentation, discard those points and start over.\\
-
-A further idealization is to relate densification to movement. This is particularly true of rotating LIDAR systems such as the velodyne, with which the sensor can only cover new areas if the robot moves.\\
-
-According to this idealization, when the robot has moved a certain amount $\Delta x$ it densifies nearby objects by the amount $\Delta D$.
-
-Assuming that the relationship between the two can be modelled with a simple proportionality,
-$$\frac{\Delta x}{\Delta D} = \alpha$$
-we are able to conclude that target density is reached when
-$$x_{target} = D_{target} * \alpha$$
-which gives us a simple rule: Segment the cloud every time the robot has moved/rotated by a certain amount $x_{target}$.\\
-
-Based on the range of the velodyne sensor, this density $D_{target}$ is only actually achieved within a certain distance from the sensor. As such, we apply a cylindrical filter at each segmentation position, with a max radius $R$.\\
-
-This affords a relatively simple implementation, with the added advantage that it makes relating segments to poses straightforward.\\
-
 
 
 \begin{figure}
   \centering
   \includegraphics[width=5.2in]{images/seg_queue.png}
-  \caption{The segmentation queue. Collectors shown in red, with the latest local map filtered to a cylinder visible at the right.}
+  \caption{A top-down view of the online segmentation process. In green, as a thin curve, is the robot trajectory. The trajectory runs from left to right, and thus at the top right end of this curve is the latest robot position. Around this point the latest Velodyne scan is faintly visible in red. Red spheres visible placed along the trajectory mark the past robot locations at which SegMatch was applied. Visible shapes surrounding this trajectory are segments stored in the target map. These segments are given arbitrary colors to visually distinguish them. The circular area at the right delimitates the latest local map, which is about to be segmented and matched against the target.}
   \label{fig:seg-queue}
 \end{figure}
 
 Fig.~\ref{fig:seg-queue} illustrates the process of online segmentation described above.
-\subsection{Filtering Segments}
 
+
+\subsection{Filtering Segments}
 \label{subsec:filtering-segments}
 
-\subsubsection{Sliced Segments}
-\label{subsub:sec:sliced}
+Based on the range of the velodyne sensor, density of the local map decreases as distance from the sensor increases. Thus, regions far from the sensor have low density, with associated registration patterns. For this reason, we have found that it is beneficial to apply a cylindrical filter at each segmentation position, with a max radius $R$. All points from the local map situated outside of $R$ are erased. This results in the distinct circular shape of the local map in Fig.~\ref{fig:seg-queue}.\\
 
-In the case where the SegMatch algorithm is applied to point clouds which have had a boundary filter applied, it is recommended to filter out segments which are partial views of objects split at the boundary.\\
-
-These partial segments can lower the quality of the matches and of the general algorithm.\\
-
-In order to do so, our method consists in first segmenting the boundary filtered point cloud, then applying a stricter version of the same boundary filter.\\
-
-For example, say that the boundary filter is cylindrical of radius $R$. We only keep segments which do not spill outside of a smaller radius $r = R-b$, $b$ being the thickness of the outer zone. Segments that have points within this zone are considered to likely also possess points outside of $R$, and to therefore be sliced.\\
+It makes sense for this radius to be larger than the distance between SegMatch positions, as some areas along the robot trajectory would otherwise be ignored. However, this leads to overlap between subsequent local maps.
 
 \subsubsection{Duplicates}
 \label{subsub:sec:duplicates}
 
+Duplicate segments occur due to overlap between subsequent local maps, or when revisiting a section of the environment.
 In our experiments, results indicate that it is necessary to prevent duplicate segments from being stored, as they later create duplicate matches.\\ 
 
-These duplicate matches are detrimental to the Geometrical Clustering step, either artificially increasing the amount of matches in a cluster, or even creating clusters consisting only of identical matches ( with an exaggerated transformation, since there is not enough true degree of freedom information in those duplicate matches ).
+These duplicate matches are detrimental to the Geometrical Clustering step, either artificially increasing the amount of matches in a cluster, or even creating clusters consisting only of identical matches (with an exaggerated transformation, since there is not enough true degree of freedom information in those duplicate matches) which favorizes false loop closures.\\
+
+In order to identify duplicate segments, we look at segments who are mutual nearest neighbours, and which are within a small distance $d_{duplicate}$ from each other. Distances between segments are calculated w.r.t. the segments centroids. We set the value of the $d_{duplicate}$ parameter to 1m, determined empirically.\\
+
+\subsubsection{Partial Segments}
+\label{subsubsec:partial}
+
+In the case where the SegMatch algorithm is applied to point clouds which have had a boundary filter applied, it is common for segments lying close to the boundary to be partial views of objects which lie on the boundary. 
+These partial segments can lower the quality of the matches and the general algorithm performance, as such it is recommended to find and eliminate such partial segments. 
+In order to do so, our method consists in first segmenting the boundary filtered point cloud, then applying a stricter version of the same boundary filter.\\
+
+For example, say that the boundary filter is cylindrical of radius $R$. We consider a cylinder of smaller radius $r = R-b$, $b$ being the thickness of the 'outer zone'. Segments that have points within this 'outer zone' are considered to likely also possess points outside of $R$, and therefore to be partial segments. Thus, they are removed. We use a value of 2m for $b$, determined empirically.\\
 
 
 \section{Results}
@@ -402,11 +353,18 @@ These duplicate matches are detrimental to the Geometrical Clustering step, eith
 
 \subsection{Loop closures}
 
-We were able to demonstrate loop closure capabilities with SegMatch, with minimal parameter tuning.\\
+We now demonstrate the loop closure capabilities of SegMatch, which were achieved with minimal parameter tuning.\\
 
-SegMatch was tested on the public KITTI datasets (drive 18, 20, 27), as well as our own. On all datasets, SegMatch was able to identify useful loop closures, and correct previous trajectory errors accordingly. Over a large amount of trials, the ratio of good to false loop closures was measured to be below 3\%.\\
+SegMatch was tested on the public KITTI odometry dataset (drive 18, 20, 27), as well as in real-world experiments. On all datasets as well as in our experiments, SegMatch was able to identify useful loop closures, and correct previous trajectory errors accordingly. Over a large amount of trials, the ratio of good to false loop closures was measured to be below 3\%.\\
 
-Dubé \cite{segmatch} presents a comparison between SegMatch and Keypoint-based methods, as well as statistics for SegMatch offline loop-closure finding capabilities. Both show promising results for the SegMatch algorithm.\\
+Dubé \cite{segmatch}, the scientific publication which issued from this work, presents a comparison between SegMatch and Keypoint-based methods (see Fig.~\ref{fig:segmatch-vs-keypoints}), as well as statistics for SegMatch offline loop-closure finding capabilities. Both show promising results for the SegMatch algorithm.\\
+
+\begin{figure}
+  \centering
+  \includegraphics[width=3.2in]{images/segmatch_vs_keypoints.png}
+  \caption{Probability of travelling a given distance before localizing in the target segment map. Data is obtained from 90 localization runs for each strategy on drive 00 of the KITTI  dataset. \textit{L2}, \textit{RF\_eigen}, and \textit{RF\_eigen+shapes} refer to variants of the SegMatch algorithm using respectively eigenvalue-based description with kNN+threshold matching, eigenvalue-based description with Random Forest matching, and eigenvalue-based + ensemble-of-shapes description with Random Forest matching. \textit{keypoint} refers to a keypoint method for finding loop closures, further detailed in \citet{segmatch}. Over these 90 runs, the \textit{keypoint} and \textit{L2} strategies respectively detected 292 and 14 false loop-closures while \textit{RF\_eigen} and \textit{RF\_eigen+shapes} made no false detections.}
+  \label{fig:segmatch-vs-keypoints}
+\end{figure}
 
 On the KITTI dataset, the method of segmentation used was Euclidean Clustering (Subsection \ref{subsec:euclidean}). On our own dataset (taken during a walk around ETH, and named "Clausiusstrasse" after the street it was taken on), Difference of Normals segmentation was used instead, for two main reasons: 1) The scene being dominated by large objects, a segmentation yielding smaller segments was preferred. 2) Our robot NIFTI moves at human walking speed, therefore much slower than KITTI's cars. This slow movement allows for enough processing time to perform Difference of Normals calculations in real-time.\\
 %TODO
