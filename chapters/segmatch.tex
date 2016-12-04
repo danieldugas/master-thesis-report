@@ -366,24 +366,24 @@ Dubé \cite{segmatch}, the scientific publication which issued from this work, p
   \label{fig:segmatch-vs-keypoints}
 \end{figure}
 
-On the KITTI dataset, the method of segmentation used was Euclidean Clustering (Subsection \ref{subsec:euclidean}). On our own dataset (taken during a walk around ETH, and named "Clausiusstrasse" after the street it was taken on), Difference of Normals segmentation was used instead, for two main reasons: 1) The scene being dominated by large objects, a segmentation yielding smaller segments was preferred. 2) Our robot NIFTI moves at human walking speed, therefore much slower than KITTI's cars. This slow movement allows for enough processing time to perform Difference of Normals calculations in real-time.\\
+On the KITTI dataset, the method of segmentation used was Euclidean Clustering (Subsection \ref{subsec:euclidean}). On our own dataset (named "Clausiusstrasse" after the street it was taken on), Difference of Normals segmentation was used instead, for two main reasons: 1) The scene being dominated by large objects, a segmentation yielding smaller segments was preferred. 2) Our robot NIFTI moves at human walking speed, therefore much slower than KITTI's cars. This slow movement allows for enough processing time to perform Difference of Normals calculations in real-time.\\
 %TODO
 
 \begin{figure}
   \centering
   \includegraphics[width=5.2in]{images/segmatchae.png}
-  \caption{Example of a successful SegMatch loop closure detection on KITTI drive 20. For visualization purposes, the source segments are virtually raised by 15 meters above the target.}
+  \caption{Example of a successful SegMatch online loop closure detection on KITTI drive 20. As in Fig.~\ref{fig:seg-queue}, the robot trajectory is represented as a thin green curve, with red markers indicating past SegMatch locations, and arbitrary color-coded segments. For visualization purposes, the source segments are virtually raised by 15 meters above the target segments. This allows the matches between segments, detected by SegMatch, to be shown as green vertical lines.}
   \label{fig:segmatch-loop-closure}
 \end{figure}
 
 \begin{figure}
   \centering
   \includegraphics[width=5.2in]{images/clausius2.png}
-  \caption{Example of a successful SegMatch loop closure detection on our own dataset, taken during a walk around Clausiusstrasse. For visualization purposes, the source segments are virtually raised by 15 meters above the target.}
+  \caption{Example of a successful SegMatch online loop closure detection during a real-world experiment on Clausiusstrasse, using a terrestrial robot with a Velodyne rotating LiDAR sensor. Robot trajectory, target and source segments, matches, and SegMatch positions are visualized using the same markers as in Fig.~\ref{fig:segmatch-loop-closure}.}
   \label{fig:clausius2}
 \end{figure}
 
-Fig.~\ref{fig:corrected} shows the final result of SegMatch being applied in real time, during a single run on KITTI drive 18. The use of loop closures to correct drift in the map successfully yields a more accurate trajectory and map. In this example, drift was artificially induced into the KITTI dataset (which otherwise contains true GPS baseline).\\
+Fig.~\ref{fig:corrected} shows the final result of SegMatch being applied in real time, during a single run on KITTI drive 18. The loop closure candidates identified by our algorithm are fed into a sparse pose graph optimizer which yields a more accurate trajectory and map. In this example, drift was artificially induced into the KITTI dataset (which otherwise contains true GPS baseline).\\
 
 \begin{figure}[!tbp]
   \centering
