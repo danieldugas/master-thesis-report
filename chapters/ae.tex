@@ -213,6 +213,19 @@ In order to visualize the distribution of values in the autoencoder latent space
 
 Another analysis of the latent space was made, looking at the average absolute value of each latent space dimension for segments with different labels. This was done in order to detect if particular classes were on average encoded closer to the origin in the 15-dimensional latent space. The resulting data is visible in Fig.~\ref{fig:avg_abs_features}.\\
 
+\begin{figure}
+  \centering
+  \includegraphics[width=5.2in]{images/fastvaccuratefeatures.pdf}
+  \caption{Comparison of the latent space representations for 1187 segments extracted from the KITTI drive 18 dataset.}
+  \label{fig:fastvaccurate_features}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=5.2in]{images/avg_abs_features.png}
+  \caption{Average absolute values of latent space representations for segments extracted from KITTI drive 18. Dashed lines reference the average of average absolute values across all features.}
+  \label{fig:avg_abs_features}
+\end{figure}
 
 \begin{figure}[p]
   \centering
@@ -236,12 +249,6 @@ Another analysis of the latent space was made, looking at the average absolute v
   \label{fig:tsne_matches_eig}
 \end{figure}
 
-\begin{figure}
-  \centering
-  \includegraphics[width=5.2in]{images/fastvaccuratefeatures.pdf}
-  \caption{Comparison of the latent space representations for 1187 segments extracted from the KITTI drive 18 dataset.}
-  \label{fig:fastvaccurate_features}
-\end{figure}
 
 An intuition is that the accurate architecture, due to having 3D convolutions, would be able to more efficiently compress segment representations in the latent space. Our observations show that on average the accurate model keeps 3 latent dimensions unused, whereas the fast model keeps 1 dimension unused (see Fig.~\ref{fig:fastvaccurate_features}). This goes in accordance with our expectations.\\
 
@@ -249,12 +256,6 @@ The KL-Divergence term in the variational Bayes autoencoder loss function acts a
 
 The latent space bias towards zero is responsible for the unused features seen in Fig.~\ref{fig:fastvaccurate_features}. Another consequence of this bias, is the fact that segments which the autoencoder can not recognize and reconstruct with high confidence tend to show lower average values overall in the latent space (visible in Fig.~\ref{fig:avg_abs_features}: segments of unknown class are harder to recognize for both human and autoencoder, as many resemble random 3d noise.)
 
-\begin{figure}
-  \centering
-  \includegraphics[width=5.2in]{images/avg_abs_features.png}
-  \caption{Average absolute values of latent space representations for segments in the KITTI drive 18 extracted segments. }
-  \label{fig:avg_abs_features}
-\end{figure}
 
 \subsection{In-the-loop Results}
 

@@ -1,10 +1,11 @@
 \chapter{Conclusion}
 \label{chap:conclusion}
 
+This thesis presented an algorithm for finding loop closures by matching 3D segments extracted from range data. An algorithm using an autoencoder neural network model to describe 3D segments was presented, and evaluated based on its ability to improve the matching capabilities of SegMatch.\\
+
 The modularity of SegMatch allows for use in different scenarios, and as demonstrated in Chapter \ref{chap:ae}, allows work on improving SegMatch to easily be constrained to a single module.\\
 
 The autoencoder neural network has shown promising capabilities as a descriptor. It can be retrained after every few runs, thus continually learning from new data collected from its environment. We believe that the knowledge stored in the autoencoder model can be used to not only complement mapping within SegMatch, but also provide useful descriptions of the environment for other processes in autonomous robots.\\
 
-Future goals for SegMatch include: Improving the generalisation ability of the algorithm. Improving SegMatch performance. Design a segmentation algorithm producing useful segments in every environment. Improving the loop-closure detection process to automatically detect erroneous loop closures. Increase the quantity and reliability of detected loop closures.\\
+SegMatch, and the autoencoder description module, have shown good performance and usefulness in real-world world scenarios. Further improvements are expected in the future, leading to increased robustness for 3-dimensional place recognition, increased usefulness of the resulting map, and of the information extracted from the environment.
 
-Future goals for the learning module include: Evaluate other potential architectures. Assess whether deeper models achieve useful improvements in segment reconstruction and description. Increase resolution of voxelized segments.\\
