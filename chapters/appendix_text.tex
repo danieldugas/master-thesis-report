@@ -33,7 +33,7 @@ This affords a relatively simple implementation, with the added advantage that i
 \section{Latent Space Dimension}
 \label{sec:latent_space_size}
 
-In the process of selecting the autoencoder architecture, a comparison was made between sizes in the latent space. The goal was to encode the segment descriptions with as small a dimensionality as possible, in order to show that the autoencoder could perform better than other descriptors even for similar description sizes. Another advantage of keeping descriptions small is that they would require less storage space when running SegMatch on long datasets.\\
+In the process of selecting the autoencoder architecture, a comparison was made between latent space sizes. The goal was to encode the segment descriptions with as small a dimensionality as possible, in order to show that the autoencoder could perform better than other descriptors even for similar description sizes. Another advantage of keeping descriptions small is that they would require less storage space when running SegMatch on long datasets, while still enabling a reconstruction of the environment.\\
 
 Non-trivial improvements in reconstruction quality were observed when switching from a latent space size of 10 to 15. However, larger dimensionalities showed increased redundancies in the latent space (such as unused dimensions, discussed in Chapter \ref{chap:ae}, Section \ref{sec:ae-results}, or lack of insignificant improvements in reconstruction ability).\\
 

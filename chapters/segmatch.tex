@@ -105,7 +105,7 @@ As single sensor scans contain registration patterns (Subsection ~\ref{subsec:ar
 
 To do so, knowledge of the robot's position and orientation at each sensor acquisition time is required. When the robot odometry is not sufficiently trustworthy, the Laser SLAM algorithm allows using the sensor data to increase the odometry knowledge and improve the quality of the accumulated data.\\
 
-This algorithm corrects the odometry by registering the new scans with the map using Iterative Closest Point (ICP). The laser and odometry measurements are finally combined using a pose-graph relaxation approach. The output is a 3D point coud which is becomes the input to the next step.
+This algorithm corrects the odometry by registering the new scans with the map using Iterative Closest Point (ICP). The laser and odometry measurements are finally combined using a pose-graph relaxation approach. The output is a 3D point cloud which is becomes the input to the next step.
 
 \section{Segmentation}
 \label{sec:segmentation}
@@ -256,7 +256,7 @@ The simplest matching algorithm considered here, kNN selects the k nearest neigh
 In the case of an ideal descriptor, this algorithm is sufficient to recognize true segment matches, even with $k = 1$. As we recall, an ideal descriptor would ensure that all segments taken from a single object in the real world have identical features.\\ 
 
 For sufficiently good descriptors, this algorithm can also be adequate, predicting mostly true matches and some false matches. One issue with descriptors that are not ideal is that they might not allow to distinguish precisely between objects in the same class.  
-That is, segments representing cars might be clustered together, with small variation in their descriptors being tied to viewpoints or the area of a car that the segment covers, rather than idiosyncracies in the cars themselves. In this case it can be useful to increase the value of $k$.\\
+That is, segments representing cars might be clustered together, with small variation in their descriptors being tied to viewpoints or the area of a car that the segment covers, rather than idiosyncrasies in the cars themselves. In this case it can be useful to increase the value of $k$.\\
 
 A common alternative to limiting the number of nearest neighbours with a threshold k, is to limit the nearest neighbours to all that fall within a certain threshold radius $r$. Furthermore, both thresholds can be combined, in order to limit nearest neighbours in both amount and distance.\\
 
