@@ -10,7 +10,7 @@ The SegMatch algorithm is constituted of 5 main steps, data input, segmentation,
 
 First, segments are extracted from a 3D point cloud, and described. They are then matched to segments from already visited places, followed by a geometric-verification step to propose loop-closures candidates.\\
 
-Segmatch takes as input two point clouds, the source and target, between which it attempts to find segment matches.  
+SegMatch takes as input two point clouds, the source and target, between which it attempts to find segment matches.  
 It sometimes happen that the target input is already segmented and described (see Section \ref{sec:online}), in which case the Segmentation and Description steps are only applied to the source cloud.  
 In any case, the Segmentation and Description steps are performed identically whether their input is the source or target cloud.\\
 
@@ -105,7 +105,7 @@ As single sensor scans contain registration patterns (Subsection ~\ref{subsec:ar
 
 To do so, knowledge of the robot's position and orientation at each sensor acquisition time is required. When the robot odometry is not sufficiently trustworthy, the Laser SLAM algorithm allows using the sensor data to increase the odometry knowledge and improve the quality of the accumulated data.\\
 
-This algorithm corrects the odometry by registering the new scans with the map using Iterative Closest Point (ICP). The laser and odometry measurements are finally combined using a pose-graph relaxation approach. The output is a 3D point cloud which is becomes the input to the next step.
+This algorithm corrects the odometry by registering the new scans with the map using Iterative Closest Point (ICP). The laser and odometry measurements are finally combined using a pose-graph relaxation approach. The output is a 3D point cloud which becomes the input to the next step.
 
 \section{Segmentation}
 \label{sec:segmentation}
@@ -114,7 +114,7 @@ The process of segmentation consists in clustering points which share a common p
 
 The input of this step is a 3D point cloud. If both source and target clouds are to be segmented, this step is simply applied once to the source and once to the target, in exactly the same way.\\
 
-A ideal segmentation target is however not explicitly defined. Should the point-cloud of a building be segmented into more basic components, such as walls, windows, and doors, or as single large cluster? Should a tree be clustered as a trunk with clusters of leaves above it or as a single cluster (illustrated in Fig.~\ref{fig:hierarchical})?\\
+An ideal segmentation target is however not explicitly defined. Should the point-cloud of a building be segmented into more basic components, such as walls, windows, and doors, or as single large cluster? Should a tree be clustered as a trunk with clusters of leaves above it or as a single cluster (illustrated in Fig.~\ref{fig:hierarchical})?\\
 
 Moosman \cite{moosmann2011unsupervised} proposes to hierarchically segment the scene, i.e., to cluster point clouds into not only segments, but also subsegments and subsubsegments. As a result, a single point can be assigned to a segment, \textit{and} one of its subsegments, and so on. This segment hierarchy is established in order to capture those patterns that exist in real-world objects, which can be composed of smaller, simpler objects.\\
 
