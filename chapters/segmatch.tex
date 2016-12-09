@@ -8,10 +8,10 @@ The present chapter first describes each step in the SegMatch algorithm, then de
 %TODO
 The SegMatch algorithm is constituted of 5 main steps, data input, segmentation, description, matching, and geometric filtering. These 5 steps are illustrated in the usual SegMatch pipeline, as shown in Fig.~\ref{fig:pipeline}.\\
 
-First, segments are extracted from a 3D point cloud, and described. They are then matched to segments from already visited places, followed by a geometric-verification step to propose loop-closures candidates.\\
+First, segments are extracted from a 3D point cloud, and described. The segment descriptions are then matched to segment descriptions from already visited places, followed by a geometric-verification step to propose loop-closures candidates.\\
 
 SegMatch takes as input two point clouds, the source and target, between which it attempts to find segment matches.  
-It sometimes happen that the target input is already segmented and described (see Section \ref{sec:online}), in which case the Segmentation and Description steps are only applied to the source cloud.  
+It is sometimes the case that the target input is already segmented and described (see Section \ref{sec:online}), in which case the Segmentation and Description steps are only applied to the source cloud.  
 In any case, the Segmentation and Description steps are performed identically whether their input is the source or target cloud.\\
 
 
@@ -22,7 +22,7 @@ In any case, the Segmentation and Description steps are performed identically wh
   \label{fig:pipeline}
 \end{figure}
 
-SegMatch can be used in a variety of situations where place recognition from range data is useful. Though the usual SegMatch algorithm (Fig.~\ref{fig:pipeline}) remains applicable to all such situations, there can be differences in how SegMatch should be integrated to the general pipeline, to interact with other robot or computer processes. Examples pipelines are given in Figures~\ref{fig:online_pipeline}, ~\ref{fig:offline_pipeline}, and ~\ref{fig:multirobot_pipeline} to showcase various uses of the SegMatch algorithm.\\
+SegMatch can be used in a variety of situations where place recognition from range data is useful. Though the usual SegMatch algorithm (Fig.~\ref{fig:pipeline}) remains applicable to all such situations, there can be differences in how SegMatch should be integrated to the general pipeline, to interact with other robots or computer processes. Examples pipelines are given in Figures~\ref{fig:online_pipeline}, ~\ref{fig:offline_pipeline}, and ~\ref{fig:multirobot_pipeline} to showcase various uses of the SegMatch algorithm.\\
 
 \begin{figure}
   \centering
@@ -55,11 +55,12 @@ The first step of SegMatch is to acquire data on which the algorithm is performe
 \subsection{Sensor Data}
 \label{subsec:sensordata}
 
-Two types of sensors were used in the course of this project, rotating sensors and 2D range-finder sensors with a rolling mechanism. \\
+Two types of sensors were used in the course of this project, rotating sensors and 2D range-finder sensors with a rolling mechanism. The sensor output takes the form of a list of points, each point as a 3D coordinates and an intensity value.\\
 
 Rotating sensors have a 360° view. With each rotation, they scan points along a cone originating from the sensor, resulting in a single circular scan line. This cone angle is varied by a set amount after each full rotation, with a maximum absolute angle making it so that the sensor is unable to scan the area directly above or under it. A typical rotating sensor scan is illustrated in Fig.~\ref{fig:velodyne-scan}. The sensor itself is pictured in Fig.~\ref{fig:velodyne}.\\
 
 2D range-finding sensors have an approximate 180° view, scanning towards the front and sides. The scan is flat, meaning that the points are all located on the same plane relative to the sensor’s roll angle. By varying this roll angle mechanically with every subsequent scan, the sensor can produce points at many vertical angles towards its sides. A 2D range-finding sensor is pictured in Fig.~\ref{fig:sick}\\
+
 
 \begin{figure}
   \centering
@@ -168,7 +169,7 @@ In order to do this, a difference of normals operator is defined, describing the
   \label{fig:DoN}
 \end{figure}
 
-The normals are first calculated at each point considering a neighbourhood of radius $r_l$, the large scale radius, then again for neighbourhood of radius $r_s$, the small scale radius. This process is often computationally heavy, increasingly so as the large scale increases (if nearest neighbours are not sampled).\\
+The normals are first calculated at each point considering a neighbourhood of radius $r_l$, the large scale radius, then again for neighbourhood of radius $r_s$, the small scale radius. This process is often computationally heavy, increasingly so as the large scale increases (if nearest neighbours are not subsampled).\\
 
 For each point, a difference of normals $\Delta_n$ is calculated between the average neighbour normals for the two scales. As a result, areas which are flat at both the large and small scale have a low difference of normals. Those points are filtered out according to the threshold $\Delta_n > \Delta_n^{threshold}$, and the remaining points are clustered together if their DoN operators are similar.\\
 
@@ -237,7 +238,7 @@ The A3 shape function describes the angles between two lines which are obtained 
 \begin{figure}
   \centering
   \includegraphics[width=3.2in]{images/eos.png}
-  \caption{The Ensemble of Shapes shape-functions, illustrated.}
+  \caption{The \textit{Ensemble of Shapes} shape-functions, illustrated.}
   \label{fig:eos}
 \end{figure}
 
@@ -256,7 +257,7 @@ The simplest matching algorithm considered here, kNN selects the k nearest neigh
 In the case of an ideal descriptor, this algorithm is sufficient to recognize true segment matches, even with $k = 1$. As we recall, an ideal descriptor would ensure that all segments taken from a single object in the real world have identical features.\\ 
 
 For sufficiently good descriptors, this algorithm can also be adequate, predicting mostly true matches and some false matches. One issue with descriptors that are not ideal is that they might not allow to distinguish precisely between objects in the same class.  
-That is, segments representing cars might be clustered together, with small variation in their descriptors being tied to viewpoints or the area of a car that the segment covers, rather than idiosyncrasies in the cars themselves. In this case it can be useful to increase the value of $k$.\\
+That is, segments representing cars might be clustered together, with small variation in their descriptors being tied to viewpoints or the area of a car that the segment covers, rather than distinctive characteristics in the cars themselves. In this case it can be useful to increase the value of $k$.\\
 
 A common alternative to limiting the number of nearest neighbours with a threshold k, is to limit the nearest neighbours to all that fall within a certain threshold radius $r$. Furthermore, both thresholds can be combined, in order to limit nearest neighbours in both amount and distance.\\
 
@@ -282,7 +283,7 @@ An efficient method to extract patterns of matches from a list of potential matc
 
 In this algorithm, matches are clustered together if they can form an Euclidean transformation, within a spatial tolerance $r$. As the Euclidean transformation has 6 degrees of freedom, any clusters with less than 3 matches is filtered out.\\
 
-The clusters which remain, those consisting of 3 or more matches, are loop closure candidates. The algorithm also returns the transformations formed by each of these clusters. A stricter ($>3$) threshold on the minimum number of matches in clusters can be set to increase robustness.\\
+The clusters which remain, those consisting of 3 or more matches, are loop closure candidates. The algorithm also returns the transformations formed by each of these clusters. A stricter ($>3$) threshold on the minimum number of matches in clusters can be set to increase robustness. In the case where several loop closure candidates are found, but a single one is desired, the one corresponding to the largest cluster of matches is selected.\\
 
 \section{Applying SegMatch - Online Example}
 \label{sec:online}
@@ -303,7 +304,7 @@ Our pipeline for this scenario is illustrated in Fig.~\ref{fig:online_pipeline}.
 \begin{enumerate}
   \item Odometry and LiDAR sensor data is continually fed to the pre-processing step, which uses both the odometry and LiDAR scans to accumulate a map (as explained in Subsection \ref{subsec:SLAM}). No other steps are performed until the map is deemed ready to be matched. This continually updated map is the source map.
   \item When the robot has moved 20 meters away from the previous SegMatch position (experimental and theoretical reasons behind this are discussed in \ref{subsec:segmentation-frequency}), SegMatch is applied between this source map and the target map (initially empty).
-\item At the end of the SegMatch iteration, the descriptions of segments extracted from the source map are added to the target map. The source map is cleared.
+\item At the end of the SegMatch iteration, the descriptions of segments extracted from the source map are added to the target map. The source map is cleared, and the process begins anew with step 1.
 \end{enumerate}
 
 
@@ -332,7 +333,7 @@ In our experiments, results indicate that it is necessary to prevent duplicate s
 
 These duplicate matches are detrimental to the Geometrical Clustering step, either artificially increasing the amount of matches in a cluster, or even creating clusters consisting only of identical matches (with an exaggerated transformation, since there is not enough true degree of freedom information in those duplicate matches) which favorizes false loop closures.\\
 
-In order to identify duplicate segments, we look at segments who are mutual nearest neighbours, and which are within a small distance $d_{duplicate}$ from each other. Distances between segments are calculated w.r.t. the segments centroids. We set the value of the $d_{duplicate}$ parameter to 1m, determined empirically.\\
+In order to identify duplicate segments, we look at segments who are mutual nearest neighbours, and which are within a small distance $d_{duplicate}$ from each other. Distances between segments are calculated w.r.t. the segments centroids. We set the value of the $d_{duplicate}$ parameter to 1m, determined empirically. When duplicates are detected, the newest segment is kept, and older duplicates are deleted.\\
 
 \subsubsection{Partial Segments}
 \label{subsubsec:partial}
@@ -355,7 +356,7 @@ For example, say that the boundary filter is cylindrical of radius $R$. We consi
 
 We now demonstrate the loop closure capabilities of SegMatch, which were achieved with minimal parameter tuning.\\
 
-SegMatch was tested on the public KITTI odometry dataset (drive 18, 20, 27), as well as in real-world experiments. On all datasets as well as in our experiments, SegMatch was able to identify useful loop closures, and correct previous trajectory errors accordingly. Over a large amount of trials, the ratio of good to false loop closures was measured to be below 3\%.\\
+SegMatch was tested on the public KITTI odometry dataset (drive 18, 20, 27), as well as in real-world experiments. On all datasets as well as in our experiments, SegMatch was able to identify useful loop closures, and correct previous trajectory errors accordingly. Over a large amount of trials, the ratio of false-to-true loop closures was measured to be below 3\%.\\
 
 Dubé \cite{segmatch}, the scientific publication which issued from this work, presents a comparison between SegMatch and Keypoint-based methods (see Fig.~\ref{fig:segmatch-vs-keypoints}), as well as statistics for SegMatch offline loop-closure finding capabilities. Both show promising results for the SegMatch algorithm.\\
 

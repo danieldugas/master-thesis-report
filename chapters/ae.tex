@@ -39,7 +39,7 @@ An arbitrary amount of hidden layers can theoretically be stacked behind each ot
 
 As is often repeated in the context of artificial neural networks, a shallow network consisting of a single neural network, given that it has infinitely many neurons, can theoretically compute any function $f(inputs) = outputs$. In practice however, deeper networks are often used when attempting to compute complex functions.\\
 
-In addition to simply having more layers, deep neural networks often have architectures and particularities which differ from the simple model presented in subsubsection \ref{subsubsec:simple-model}. This is due in part to instabilities which arise when backpropagating the error through many layers.\\ 
+In addition to simply having more layers, deep neural networks often have architectures and particularities which differ from the simple model presented in the previous Subsubsection. This is due in part to instabilities which arise when backpropagating the error through many layers.\\ 
 
 \subsubsection{Convolutional Neural Networks}
 
@@ -53,7 +53,7 @@ Thus convolutional layers allow useful pattern learning in the input, with few p
 
 \subsubsection{Pooling}
 
-\textit{Pooling} layers reduce the size of their output by applying a pre-determined filter (i.e., which has no learnable parameters) at every position with a stride. For example, a 2x2 \textit{Max pooling} layer has a single max filter of size 2x2, which simply returns the max value of its inputs. This filter is applied with a stride of 2, resulting in an output half the size of the input.\\
+\textit{Pooling} layers reduce the size of their output by applying a pre-determined filter (i.e., which has no learnable parameters) at every position with a stride. For example, a 2x2 \textit{Max pooling} layer has a single max filter of size 2x2, which simply returns the max value of its inputs. This filter is applied with a stride of 2, resulting in a downsampled output.\\
 
 \subsubsection{Other Architectures}
 
@@ -61,12 +61,12 @@ It should be mentioned that there are yet many other architectures of neural net
 
 \subsubsection{Gradient Descent Optimization}
 
-Gradient Descent, mentioned in Subsubsection \ref{subsubsec:simple-model}, is a simple algorithm, but not the most efficient, for finding local minima for the error function in the many-dimensional model parameter space.\\
+Gradient Descent (mentioned in the ``Artificial Neural Network'' Subsubsection) is a simple algorithm, but not the most efficient, for finding local minima for the error function in the many-dimensional model parameter space.\\
 
-Optimizers help navigate the many-dimensional parameter space more efficiently when performing the backpropagation step. They do so by implementing methods such as artificial momentum, looking ahead of the current position in this parameter space, and other techniques. This allows the backpropagation algorithm to reach local minima of the error function with fewer learning steps.\\
+Optimizers are modified Gradient Descent algorithms which help navigate the many-dimensional parameter space more efficiently when performing the backpropagation step. They do so by implementing methods such as artificial momentum, looking ahead of the current position in this parameter space, and other techniques. This allows the backpropagation algorithm to reach local minima of the error function with fewer learning steps.\\
 
 In this project, the neural networks were trained by using the Adaptive Moment Estimation (ADAM) optimizer. The ADAM optimizer computes learning rates for each parameter in the model, and adapts those rates based on previous fluctuations of gradients and previous parameter update values.  
-More information is available in the authors' paper \cite{adam}, where they also show empirical results of ADAM's learning speed-up. 
+More information is available in \citet{adam}, where empirical results of ADAM's learning speed-up are also shown.
 
 \subsection{Neural Network Input}
 \label{subsec:NNinput}
@@ -77,7 +77,7 @@ A common way to adapt the data to the input size is padding, where the input siz
 
 In the case of 3D segments, a list of points is intuitively not the best representation of the underlying 3D data, as it has an intrinsic order which in practice is arbitrary (i.e., there is no reason for the first point to be first). Networks however tend to try to learn relationships between inputs depending on their positions, where in this case (the input being an unordered list of points) there is none.\\
 
-Voxelizing the 3D segments yields occupancy grids of fixed size. In addition, the order of the values inside a voxel representation matters (the first point has coordinates (0,0,0), the second (0,0,1), etc.). These properties are ideal for convolutional networks. The downside is that precise geometrical information is lost with low voxel grid resolutions.\\
+Voxelizing the 3D segments can yield occupancy grids of fixed size. In addition, the order of the values inside a voxel representation matters (the first point has coordinates (0,0,0), the second (0,0,1), etc.). These properties are ideal for convolutional networks. The downside is that precise geometrical information is lost with low voxel grid resolutions.\\
 
 The proposed process of voxelizing a 3D segment is as follows:
 
@@ -121,7 +121,7 @@ Whereas other types of unsupervised models exist, such as Adversarial Networks, 
 \label{subsec:variational-bayes}
 %TODO
 
-Kingma and Welling \cite{variational-autoencoder} present a modified autoencoder architecture. The variational Bayes autoencoder does not only predict an n-value representation at the encoder output, but parameters to a probabilistic distribution of each of those values. In simplified terms, it can be designed to predict means and variances in the case of a standard distribution. A value is then randomly sampled from each distribution, and the resulting n-values are passed to the decoder network.\\
+Kingma and Welling \cite{variational-autoencoder} present a modified autoencoder architecture. The variational Bayes autoencoder does not only predict an n-value representation at the encoder output (the n-dimensional space at the encoder output is also referred to as the \textit{latent space}), but parameters to a probabilistic distribution of each of those values. In simplified terms, it can be designed to predict means and variances in the case of a standard distribution. A value is then randomly sampled from each distribution, and the resulting n-values are passed to the decoder network.\\
 
 The second contribution in \citet{variational-autoencoder} is to introduce a cost function for the autoencoder output which not only penalizes errors in the reconstruction (through for example cross-entropy loss between output prediction and true probability), but also the Kullback–Leibler divergence of the latent space prediction w.r.t. the true prior distribution in latent space. \citet{variational-autoencoder} show that these modifications to the standard autoencoder result in superior prediction performance and learning efficiency.
 
@@ -137,11 +137,11 @@ As depicted in Fig.~\ref{fig:architecture}, the fast architecture consists of th
 \begin{figure}
   \centering
   \includegraphics[width=5.2in]{images/architecture.pdf}
-  \caption{The SegMatchAE autoencoder architectures. a) The fast architecture, with both the encoder and decoder sections of the model being composed of two fully connected layers. b) The accurate architecture, with two added 3D convolutional layers for both encoding and decoding.}
+  \caption{The SegMatchAE autoencoder architectures. a) The fast architecture, with both the encoder and decoder sections of the model being composed of two fully connected layers. b) The accurate architecture, with two added 3D convolutional layers for both encoding and decoding, with a max-pooling step after each convolutional layer.}
   \label{fig:architecture}
 \end{figure}
 
-In both architectures, the latent space size is set to 15. The value of 15 was selected experimentally(See Appendix, Section \ref{sec:latent_space_size}). To these 15 values predicted by the autoencoder for segment representations, are concatenated 3 dimensional scales, for $x$, $y$, and $z$, which are calculated during voxelization. These are added because the voxelization step scales all segments to fit inside the occupancy grid. Thus, the autoencoder is given dimensionless input in $x$, $y$, and $z$ directions. As such, unless the autoencoder guesses the common size of segments based on other indicators (there is reason to believe that it does not: such information would not improve its reconstruction accuracy, nor do we give it any data during training that would allow such properties to be learnt), size information of the segment would be lost. This gives the SegMatch autoencoder descriptor a total of 18 features.\\
+In both architectures, the latent space size is set to 15. The value of 15 was selected experimentally, see Appendix, Section \ref{sec:latent_space_size}. To these 15 values predicted by the autoencoder for segment representations, are concatenated 3 dimensional scales, for $x$, $y$, and $z$, which are calculated during voxelization. These are added because the voxelization step scales all segments to fit inside the occupancy grid. Thus, the autoencoder is given dimensionless input in $x$, $y$, and $z$ directions. As such, unless the autoencoder guesses the common size of segments based on other indicators (there is reason to believe that it does not: such information would not improve its reconstruction accuracy, nor do we give it any data during training that would allow such properties to be learnt), size information of the segment would be lost. This gives the SegMatch autoencoder descriptor a total of 18 features.\\
 
 
 \subsection{Training}
@@ -150,7 +150,7 @@ In both architectures, the latent space size is set to 15. The value of 15 was s
 A model was trained for each architecture, fast and accurate.  
 The training data were segments extracted during SegMatch runs on the KITTI datasets (drive 18, 20, 27), which results in over 6000 unique 3D segments.\\
 
-In addition, each segment was rotated according to 36 rotation angles distributed linearly from 0 to 2$\pi$, resulting in a total of over 216000 examples. The first 400 original segments and their rotations - a total of 14400 examples - were used as a validation dataset, and the remaining were used as training examples.\\
+In addition, each segment was rotated along the vertical axis according to 36 rotation angles distributed linearly from 0 to 2$\pi$, resulting in a total of over 216000 examples. The first 400 original segments and their rotations - a total of 14400 examples - were used as a validation dataset, and the remaining were used as training examples.\\
 
 With GPU enabled (GeForce GTX 980 Ti), a single training epoch on this dataset takes on average 500 seconds for the fast model, and 1000 seconds for the accurate model.\\
 
@@ -203,11 +203,11 @@ It should be noted that an autoencoder model can be used not only encode and rec
 \subsection{Latent Space}
 \label{subsec:latent_space}
 
-In order to visualize the autoencoder latent space, T-SNE was used to project from n-dimensional to 2-dimensional space. \\
+In order to visualize the autoencoder latent space, t-Distributed Stochastic Neighbor Embedding (t-SNE) \cite{tsne} was used to project from n-dimensional to 2-dimensional space. \\
 
-First, SegMatch was run on the KITTI drive 18 dataset, and the collected segments were extracted to a database. In addition, the matches found by SegMatch during this run were manually verified to be true matches between segments representing identical objects in the environment, and extracted. Labels were assigned by hand to segments, categorizing them into 4 classes, 'cars', 'walls', 'post', and 'unknown'. The 'unknown' class qualifies objects which were not recognized by a human. The results of T-SNE analysis on the segments' autoencoder encodings (fast architecture) are shown in Fig.~\ref{fig:tsne}. It should be noted that the scale features mentioned in Section \ref{sec:ae-implementation} are not included. In addition, the collected ground truth matches between segments were overlaid onto the T-SNE projection of their descriptions, as thin black lines collecting descriptions of matching segment pairs. The result is visible in Fig.~\ref{fig:tsne_matches}.\\
+First, SegMatch was run on the KITTI drive 18 dataset, and the collected segments were extracted to a database. In addition, the matches found by SegMatch during this run were manually verified to be true matches between segments representing identical objects in the environment, and extracted. Labels were assigned by hand to segments, categorizing them into 4 classes, 'cars', 'walls', 'post', and 'unknown'. The 'unknown' class qualifies objects which were not recognized by a human. The results of t-SNE analysis on the segments' autoencoder encodings (fast architecture) are shown in Fig.~\ref{fig:tsne}. It should be noted that the scale features mentioned in Section \ref{sec:ae-implementation} are not included. In addition, the collected ground truth matches between segments were overlaid onto the t-SNE projection of their descriptions, as thin black lines collecting descriptions of matching segment pairs. The result is visible in Fig.~\ref{fig:tsne_matches}.\\
 
-For comparison, the same process as in the above paragraph was applied to the same segments, using their eigenvalue-based descriptions instead of autoencoder descriptions. The resulting T-SNE projection and matches are visible in Fig.~\ref{fig:tsne_eig} and Fig.~\ref{fig:tsne_matches_eig} respectively.\\
+For comparison, the same process as in the above paragraph was applied to the same segments, using their eigenvalue-based descriptions instead of autoencoder descriptions. The resulting t-SNE projection and matches are visible in Fig.~\ref{fig:tsne_eig} and Fig.~\ref{fig:tsne_matches_eig} respectively.\\
 
 In order to visualize the distribution of values in the autoencoder latent space, the encodings of a large number of segments were plotted, showing each segment's 15-value latent space representation as a stepfunction plot. This process was applied to both the fast architecture descriptions, and the accurate architecture descriptions. The resulting plots are displayed side-to-side in Fig.~\ref{fig:fastvaccurate_features}.\\
 
@@ -234,7 +234,7 @@ Another analysis of the latent space was made, looking at the average absolute v
   \label{fig:tsne}
   \hfill
   \includegraphics[width=5.2in]{images/t-sne_matches.png}
-  \caption{Segment ground truth matches collected during the KITTI drive 18 run, overlaid on the T-SNE projection of their autoencoder description.}
+  \caption{Segment ground truth matches collected during the KITTI drive 18 run, overlaid on the t-SNE projection of their autoencoder description.}
   \label{fig:tsne_matches}
 \end{figure}
 
@@ -245,7 +245,7 @@ Another analysis of the latent space was made, looking at the average absolute v
   \label{fig:tsne_eig}
   \hfill
   \includegraphics[width=5.2in]{images/t-sne_matches_eig.png}
-\caption{Segment ground truth matches collected during the KITTI drive 18 run, overlaid on the T-SNE projection of their eigenvalue-based description.}
+\caption{Segment ground truth matches collected during the KITTI drive 18 run, overlaid on the t-SNE projection of their eigenvalue-based description.}
   \label{fig:tsne_matches_eig}
 \end{figure}
 

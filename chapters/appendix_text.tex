@@ -19,7 +19,7 @@ Thus it can be advantageous to prioritize closer objects, which allows one to as
 
 The resulting strategy is excessively simple: accumulate all points, until target density is reached in nearby objects, then segment all accumulated points. After segmentation, discard those points and start over. Thus only a single approximate rate of densification is considered.\\
 
-A further idealization is to relate this densification rate to movement. This is particularly true of rotating LIDAR systems such as the velodyne, with which the sensor can only cover new areas if the robot moves.  
+A further idealization is to relate this densification rate to movement. This is particularly true of rotating LiDAR systems such as the velodyne, with which the sensor can only cover new areas if the robot moves.  
 According to this idealization, when the robot has travelled a certain distance $\Delta x$ nearby segments densify by a certain amount $\Delta D$, and the relationship between the two is modelled with a simple proportionality,
 $$\frac{\Delta x}{\Delta D} = \alpha$$
 Where alpha is assumed to be an unknown constant. With this assumption, we are able to conclude that target density is reached when

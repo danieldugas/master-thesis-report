@@ -3,8 +3,8 @@
 
 The current state-of-the-art for mapping with range data is evolving quickly. Real time mapping has already been demonstrated using graph-based SLAM and recognition, and was shown to yield useful results in many cases.\\
 
-However most methods still show non-negligible amounts of drift over time. In that case, algorithms can be developed to “close the loop”, i.e., to recognize already-mapped sections of the environment and use this prior knowledge to adjust the accumulated error of previous predictions.\\
+However most methods still show non-negligible amounts of drift over time. In that case, algorithms can be developed to “close the loop”, i.e., to recognize already-mapped sections of the environment and use this prior knowledge to correct the accumulated error of previous predictions.\\
 
-This thesis first proposes SegMatch, an algorithm for finding loop closures with range data, based on segmentation and matching of the 3D point cloud. This is inspired by the way humans seem to recall objects and object patterns in previously visited locations, in order to perform place recognition and adjust prior location error.\\
+This thesis first proposes SegMatch, an algorithm for finding loop closures with range data, based on segmentation and matching of the 3D point clouds. This is inspired by the way humans seem to recall objects and object patterns in previously visited locations, in order to perform place recognition and adjust prior location error.\\
 
 In a second step, we test and evaluate the usefulness of neural networks for describing segments in an unsupervised regime. Finally, the neural network models are inserted into the algorithm pipeline, to enhance loop closure detection. Evaluation of the enhanced algorithm (SegMatchAE) is performed.\\
